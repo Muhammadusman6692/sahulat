@@ -25,6 +25,7 @@ export type MenuGroup = {
  * linking to a 404.
  */
 const ROUTES: Record<string, string> = {
+  COMPANY_MAINT: "/admin/companies",
   ITEM_MAINT: "/admin/items",
 };
 
