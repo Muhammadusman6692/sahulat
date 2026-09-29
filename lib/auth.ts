@@ -3,8 +3,6 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { query, execute } from "@/lib/oracle";
-import { ACTIONS } from "@/lib/permissions";
-import type { PermissionMap, ScopeRow, SessionUser } from "@/lib/permissions";
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_MINUTES = 15;
@@ -18,75 +16,11 @@ type UserRow = {
   LOCKED_UNTIL: Date | null;
 };
 
-type PermRow = {
-  MODULE_CODE: string;
-  CAN_VIEW: string;
-  CAN_CREATE: string;
-  CAN_EDIT: string;
-  CAN_POST: string;
-  CAN_CANCEL: string;
-  CAN_PRINT: string;
-  CAN_APPROVE: string;
-};
-
-function packPermissions(rows: PermRow[]): PermissionMap {
-  const map: PermissionMap = {};
-  for (const r of rows) {
-    // A module may appear once per role, so OR the grants together.
-    let letters = map[r.MODULE_CODE] ?? "";
-    const add = (flag: string, letter: string) => {
-      if (flag === "Y" && !letters.includes(letter)) letters += letter;
-    };
-    add(r.CAN_VIEW, ACTIONS.VIEW);
-    add(r.CAN_CREATE, ACTIONS.CREATE);
-    add(r.CAN_EDIT, ACTIONS.EDIT);
-    add(r.CAN_POST, ACTIONS.POST);
-    add(r.CAN_CANCEL, ACTIONS.CANCEL);
-    add(r.CAN_PRINT, ACTIONS.PRINT);
-    add(r.CAN_APPROVE, ACTIONS.APPROVE);
-    map[r.MODULE_CODE] = letters;
-  }
-  return map;
-}
-
-async function loadProfile(userId: number) {
-  const [roles, perms, access] = await Promise.all([
-    query<{ ROLE_NAME: string }>(
-      `SELECT r.role_name
-         FROM user_role ur
-         JOIN role r ON r.role_id = ur.role_id
-        WHERE ur.user_id = :id AND r.active_yn = 'Y'
-        ORDER BY r.role_name`,
-      { id: userId },
-    ),
-    query<PermRow>(
-      `SELECT rp.module_code, rp.can_view, rp.can_create, rp.can_edit,
-              rp.can_post, rp.can_cancel, rp.can_print, rp.can_approve
-         FROM user_role ur
-         JOIN role r ON r.role_id = ur.role_id
-         JOIN role_permission rp ON rp.role_id = ur.role_id
-        WHERE ur.user_id = :id AND r.active_yn = 'Y'`,
-      { id: userId },
-    ),
-    query<{ COMPANY_ID: number; BRANCH_ID: number | null; WAREHOUSE_ID: number | null }>(
-      `SELECT company_id, branch_id, warehouse_id
-         FROM user_company_access
-        WHERE user_id = :id`,
-      { id: userId },
-    ),
-  ]);
-
-  return {
-    roles: roles.map((r) => r.ROLE_NAME),
-    permissions: packPermissions(perms),
-    access: access.map<ScopeRow>((a) => ({
-      companyId: a.COMPANY_ID,
-      branchId: a.BRANCH_ID,
-      warehouseId: a.WAREHOUSE_ID,
-    })),
-  };
-}
-
+/**
+ * The token carries identity only. Permissions and scope are read per request
+ * in lib/dal.ts so that granting or revoking access takes effect immediately
+ * rather than at the user's next sign-in.
+ */
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
@@ -108,7 +42,7 @@ export const authOptions: NextAuthOptions = {
         );
         const user = rows[0];
 
-        // Same rejection for unknown user and wrong password, so the response
+        // Unknown user and wrong password fail identically, so the response
         // does not reveal which usernames exist.
         if (!user) return null;
         if (user.IS_ACTIVE !== "Y") return null;
@@ -136,13 +70,10 @@ export const authOptions: NextAuthOptions = {
           { id: user.USER_ID },
         );
 
-        const profile = await loadProfile(user.USER_ID);
-
         return {
           id: String(user.USER_ID),
           name: user.FULL_NAME,
           username: user.USERNAME,
-          ...profile,
         };
       },
     }),
@@ -150,13 +81,9 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        const u = user as unknown as SessionUser & { id: string; name: string };
-        token.userId = Number(u.id);
-        token.username = u.username;
-        token.fullName = u.name;
-        token.roles = u.roles;
-        token.permissions = u.permissions;
-        token.access = u.access;
+        token.userId = Number(user.id);
+        token.username = (user as { username: string }).username;
+        token.fullName = user.name ?? "";
       }
       return token;
     },
@@ -165,9 +92,6 @@ export const authOptions: NextAuthOptions = {
         userId: token.userId as number,
         username: token.username as string,
         fullName: token.fullName as string,
-        roles: token.roles as string[],
-        permissions: token.permissions as PermissionMap,
-        access: token.access as ScopeRow[],
       };
       return session;
     },

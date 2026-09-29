@@ -1,14 +1,13 @@
-import type { PermissionMap, ScopeRow } from "@/lib/permissions";
-
 declare module "next-auth" {
+  /**
+   * Identity only. Permissions and scope are read per request in lib/dal.ts,
+   * never carried in the token.
+   */
   interface Session {
     user: {
       userId: number;
       username: string;
       fullName: string;
-      roles: string[];
-      permissions: PermissionMap;
-      access: ScopeRow[];
     };
   }
 
@@ -16,9 +15,6 @@ declare module "next-auth" {
     id: string;
     name: string;
     username: string;
-    roles: string[];
-    permissions: PermissionMap;
-    access: ScopeRow[];
   }
 }
 
@@ -27,8 +23,7 @@ declare module "next-auth/jwt" {
     userId: number;
     username: string;
     fullName: string;
-    roles: string[];
-    permissions: PermissionMap;
-    access: ScopeRow[];
   }
 }
+
+export {};
