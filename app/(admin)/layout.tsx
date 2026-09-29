@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { verifySession } from "@/lib/dal";
+import { getScopeLabels } from "@/lib/db/scope";
 import { canView } from "@/lib/permissions";
 import { NAV } from "@/components/app-shell/nav-config";
 import SidebarNav from "@/components/app-shell/sidebar-nav";
@@ -11,6 +12,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/">) {
   // do not re-render on navigation and cannot stop a child segment from
   // running, so each page calls requirePermission for itself.
   const user = await verifySession();
+  const scope = await getScopeLabels(user.access);
 
   const allowed = NAV.flatMap((g) => g.items)
     .map((i) => i.module)
@@ -55,21 +57,23 @@ export default async function AdminLayout({ children }: LayoutProps<"/">) {
 
       <div className={styles.main}>
         <header className={styles.topbar}>
-          <div className={styles.scopeGroup}>
-            <span className={styles.scopeLabel}>SCOPE</span>
-            <span className={styles.scopeField}>
-              <span className={styles.scopeName}>Company</span>
-              <span className={styles.scopeValue}>Jahangir Trading Co.</span>
-            </span>
-            <span className={styles.scopeField}>
-              <span className={styles.scopeName}>Branch</span>
-              <span className={styles.scopeValue}>Lahore — Badami Bagh</span>
-            </span>
-            <span className={styles.scopeField}>
-              <span className={styles.scopeName}>Warehouse</span>
-              <span className={styles.scopeValue}>Main Store</span>
-            </span>
-          </div>
+          {scope && (
+            <div className={styles.scopeGroup}>
+              <span className={styles.scopeLabel}>SCOPE</span>
+              <span className={styles.scopeField}>
+                <span className={styles.scopeName}>Company</span>
+                <span className={styles.scopeValue}>{scope.company}</span>
+              </span>
+              <span className={styles.scopeField}>
+                <span className={styles.scopeName}>Branch</span>
+                <span className={styles.scopeValue}>{scope.branch}</span>
+              </span>
+              <span className={styles.scopeField}>
+                <span className={styles.scopeName}>Warehouse</span>
+                <span className={styles.scopeValue}>{scope.warehouse}</span>
+              </span>
+            </div>
+          )}
 
           <div className={styles.spacer} />
 

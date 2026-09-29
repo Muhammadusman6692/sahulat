@@ -1,0 +1,259 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+.title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.grow {
+  flex-grow: 1;
+}
+
+.btn {
+  padding: 7px 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn:hover {
+  background: var(--surface-sunken);
+}
+
+.btnPrimary {
+  composes: btn;
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #ffffff;
+  font-weight: 600;
+  padding: 7px 15px;
+}
+
+.btnPrimary:hover {
+  background: var(--primary-hover);
+  color: #ffffff;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.toolbar {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-grow: 1;
+  max-width: 330px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  background: var(--surface);
+}
+
+.search:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-tint);
+}
+
+.searchInput {
+  border: none;
+  outline: none;
+  flex-grow: 1;
+  font-size: 12px;
+  background: transparent;
+  min-width: 0;
+}
+
+.select {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 9px;
+  font-size: 12px;
+  background: var(--surface);
+}
+
+.count {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.table thead tr {
+  background: var(--surface-sunken);
+  color: var(--ink-2);
+  text-align: left;
+}
+
+.table th {
+  padding: 9px 12px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid #f2f0eb;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background: #fcfbf8;
+}
+
+.num {
+  text-align: right;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.code {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+}
+
+.strong {
+  font-weight: 500;
+}
+
+.muted {
+  color: var(--ink-3);
+}
+
+.inactiveRow td {
+  color: var(--ink-disabled);
+}
+
+.lowRow {
+  background: #fef9f4;
+}
+
+.tag {
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: #f0eee8;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.badge {
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badgeOk {
+  composes: badge;
+  background: var(--primary-tint);
+  color: var(--primary);
+}
+
+.badgeWarn {
+  composes: badge;
+  background: var(--accent-tint);
+  color: var(--accent-ink);
+}
+
+.badgeOff {
+  composes: badge;
+  background: #f0eee8;
+  color: var(--ink-3);
+}
+
+.footer {
+  padding: 10px 14px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pageLink {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface);
+  font-size: 12px;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.pageLink:hover {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+.pageLinkOff {
+  composes: pageLink;
+  color: var(--ink-disabled);
+  pointer-events: none;
+}
+
+.pageOf {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 12px;
+  padding: 0 3px;
+}
+
+.empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.note {
+  font-size: 11px;
+  color: var(--ink-3);
+}

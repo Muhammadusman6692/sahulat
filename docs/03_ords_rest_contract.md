@@ -1,5 +1,19 @@
 # ORDS REST API Contract — Phase 1
 
+> **Scope narrowed (2026-09-29).** Server-rendered back-office screens (masters,
+> documents, reports) do **not** call ORDS. The Next.js server queries Oracle directly
+> through a pooled `oracledb` connection and passes the verified session's `user_id` into
+> `pkg_security`. Because those pages render on the server, the browser never reaches the
+> database either way, so the extra hop bought nothing — and routing through ORDS would
+> have required configuring ORDS to validate the NextAuth JWT purely so it could learn
+> which user to authorise, i.e. a second auth system to maintain.
+>
+> ORDS remains the interface for **device-facing clients that sync from outside the
+> server** — the offline POS terminals and salesman PWAs (`/pos/*`, `/dist/*`) — and for
+> external integrations. Those endpoints, and the idempotency rules around
+> `offline_uuid`, are unchanged. The master/document endpoints below are retained as the
+> contract for any such client, not as the path the web UI takes.
+
 Base path convention: `https://<host>/ords/<schema>/api/v1/...`
 Every endpoint (except `/auth/login`) requires header `Authorization: Bearer <JWT>`.
 JWT is issued by Next.js (NextAuth Credentials Provider) after verifying `app_user`

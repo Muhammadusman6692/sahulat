@@ -257,6 +257,34 @@ BEGIN
      ON (t.user_id = s.u AND t.role_id = s.r)
   WHEN NOT MATCHED THEN INSERT (user_id, role_id) VALUES (s.u, s.r);
 
+  -- A deliberately restricted second login, so permission gating can be tested
+  -- against something other than a role that is allowed everything. Branch
+  -- Accountant has no ADMIN modules at all, so /admin/* must be refused.
+  DECLARE
+    v_acct_user NUMBER;
+  BEGIN
+    BEGIN
+      SELECT user_id INTO v_acct_user FROM app_user WHERE username = 'accountant';
+    EXCEPTION WHEN NO_DATA_FOUND THEN
+      INSERT INTO app_user (username, password_hash, full_name)
+      VALUES ('accountant', c_hash, 'Ayesha Khan')
+      RETURNING user_id INTO v_acct_user;
+    END;
+
+    MERGE INTO user_role t
+    USING (SELECT v_acct_user AS u, v_acct_role AS r FROM dual) s
+       ON (t.user_id = s.u AND t.role_id = s.r)
+    WHEN NOT MATCHED THEN INSERT (user_id, role_id) VALUES (s.u, s.r);
+
+    MERGE INTO user_company_access t
+    USING (SELECT v_acct_user AS u, v_company_id AS c, v_branch_id AS b FROM dual) s
+       ON (t.user_id = s.u AND t.company_id = s.c AND t.branch_id = s.b
+           AND t.warehouse_id IS NULL)
+    WHEN NOT MATCHED THEN
+      INSERT (user_id, company_id, branch_id, warehouse_id)
+      VALUES (s.u, s.c, s.b, NULL);
+  END;
+
   -- Scope: whole company, all branches and warehouses (NULLs mean unrestricted)
   MERGE INTO user_company_access t
   USING (SELECT v_user_id AS u, v_company_id AS c FROM dual) s
