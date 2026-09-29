@@ -57,3 +57,36 @@ export async function execute(
     await conn.close();
   }
 }
+
+/**
+ * Runs several statements on one connection as a single transaction, so a
+ * document either lands completely or not at all. Nothing inside autocommits;
+ * the commit happens once the callback returns, and any throw rolls the whole
+ * lot back.
+ */
+export async function withTransaction<T>(
+  fn: (tx: {
+    query: <R>(sql: string, binds?: oracledb.BindParameters) => Promise<R[]>;
+    execute: (sql: string, binds?: oracledb.BindParameters) => Promise<oracledb.Result<unknown>>;
+  }) => Promise<T>,
+): Promise<T> {
+  const pool = await getPool();
+  const conn = await pool.getConnection();
+  try {
+    const result = await fn({
+      query: async <R>(sql: string, binds: oracledb.BindParameters = {}) => {
+        const r = await conn.execute<R>(sql, binds);
+        return r.rows ?? [];
+      },
+      execute: (sql: string, binds: oracledb.BindParameters = {}) =>
+        conn.execute(sql, binds),
+    });
+    await conn.commit();
+    return result;
+  } catch (e) {
+    await conn.rollback();
+    throw e;
+  } finally {
+    await conn.close();
+  }
+}

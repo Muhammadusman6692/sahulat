@@ -114,6 +114,7 @@ export async function saveCompany(
       await createCompany(toInput(parsed.data), user.userId);
     }
   } catch (e) {
+    console.error("saveCompany failed:", e);
     return {
       error: describeOracleError(e, "The company could not be saved."),
       values: submittedValues(formData),

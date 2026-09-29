@@ -26,6 +26,7 @@ export type MenuGroup = {
  */
 const ROUTES: Record<string, string> = {
   COMPANY_MAINT: "/admin/companies",
+  BRANCH_MAINT: "/admin/branches",
   ITEM_MAINT: "/admin/items",
 };
 

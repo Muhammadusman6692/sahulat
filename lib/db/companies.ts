@@ -1,5 +1,5 @@
 import "server-only";
-import { query, execute } from "@/lib/oracle";
+import { query, execute, withTransaction } from "@/lib/oracle";
 
 export type CompanyRow = {
   COMPANY_ID: number;
@@ -48,14 +48,37 @@ export async function getCompany(companyId: number) {
   return rows[0] ?? null;
 }
 
+/**
+ * Creating a company also grants the creator unrestricted access to it. Scope
+ * lives in user_company_access, not in the role, so without this the person who
+ * just created a company could not add a branch to it — pkg_security.check_scope
+ * would refuse them.
+ */
 export async function createCompany(input: CompanyInput, userId: number) {
-  await execute(
-    `INSERT INTO company (company_code, company_name, ntn_no, strn_no, address,
-                          fy_start_month, base_currency, active_yn, created_by)
-     VALUES (:companyCode, :companyName, :ntnNo, :strnNo, :address,
-             :fyStartMonth, :baseCurrency, :activeYn, :userId)`,
-    { ...input, userId },
-  );
+  await withTransaction(async (tx) => {
+    await tx.execute(
+      `INSERT INTO company (company_code, company_name, ntn_no, strn_no, address,
+                            fy_start_month, base_currency, active_yn, created_by)
+       VALUES (:companyCode, :companyName, :ntnNo, :strnNo, :address,
+               :fyStartMonth, :baseCurrency, :activeYn, :userId)`,
+      { ...input, userId },
+    );
+
+    // Read the id back rather than using RETURNING INTO: company_code is
+    // unique, this row is visible inside the transaction that just wrote it,
+    // and it avoids an OUT bind the driver rejected here with NJS-012.
+    const [created] = await tx.query<{ COMPANY_ID: number }>(
+      `SELECT company_id FROM company WHERE company_code = :code`,
+      { code: input.companyCode },
+    );
+    if (!created) throw new Error("Company row was not found after insert");
+
+    await tx.execute(
+      `INSERT INTO user_company_access (user_id, company_id, branch_id, warehouse_id)
+       VALUES (:userId, :companyId, NULL, NULL)`,
+      { userId, companyId: created.COMPANY_ID },
+    );
+  });
 }
 
 export async function updateCompany(
