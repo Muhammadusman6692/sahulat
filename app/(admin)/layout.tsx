@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { verifySession } from "@/lib/dal";
 import { getScopeLabels } from "@/lib/db/scope";
-import { canView } from "@/lib/permissions";
-import { NAV } from "@/components/app-shell/nav-config";
+import { getMenu } from "@/lib/db/menu";
 import SidebarNav from "@/components/app-shell/sidebar-nav";
 import SignOutButton from "@/components/app-shell/sign-out-button";
 import styles from "@/components/app-shell/shell.module.css";
@@ -12,11 +11,10 @@ export default async function AdminLayout({ children }: LayoutProps<"/">) {
   // do not re-render on navigation and cannot stop a child segment from
   // running, so each page calls requirePermission for itself.
   const user = await verifySession();
-  const scope = await getScopeLabels(user.access);
-
-  const allowed = NAV.flatMap((g) => g.items)
-    .map((i) => i.module)
-    .filter((m): m is string => !!m && canView(user.permissions, m));
+  const [scope, menu] = await Promise.all([
+    getScopeLabels(user.access),
+    getMenu(user.permissions),
+  ]);
 
   const initials = user.fullName
     .split(/\s+/)
@@ -48,10 +46,11 @@ export default async function AdminLayout({ children }: LayoutProps<"/">) {
           </span>
         </Link>
 
-        <SidebarNav allowed={allowed} />
+        <SidebarNav menu={menu} />
 
         <p className={styles.sidebarFoot}>
           Menu reflects your role. Hidden items are also blocked server-side.
+          Dots track build progress and come out once the ERP is finished.
         </p>
       </aside>
 

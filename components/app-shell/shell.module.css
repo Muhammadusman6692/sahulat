@@ -69,12 +69,49 @@
 .item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
+  gap: 8px;
+  padding: 7px 10px;
   border-radius: var(--radius);
   color: var(--chrome-ink-2);
   text-decoration: none;
   font-size: 13px;
+}
+
+.itemLabel {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A module with no screen yet: visible so the plan is legible, but clearly
+   not a destination. */
+.itemTodo {
+  composes: item;
+  color: #64766f;
+  cursor: default;
+}
+
+.dotPending,
+.dotProgress {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dotPending {
+  background: #4a5a55;
+}
+
+.dotProgress {
+  background: #e8a94b;
+}
+
+.badgeDone {
+  color: #5fbf9b;
+  flex-shrink: 0;
 }
 
 .item:hover {

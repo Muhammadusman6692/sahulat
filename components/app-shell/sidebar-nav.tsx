@@ -2,43 +2,88 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV } from "./nav-config";
+import type { MenuGroup } from "@/lib/db/menu";
 import styles from "./shell.module.css";
 
+// A <title> child is only valid inside <svg>; inside a <span> the browser
+// treats it as the document title and renames the tab.
+function StatusBadge({ status }: { status: string }) {
+  if (status === "COMPLETED") {
+    return (
+      <svg
+        className={styles.badgeDone}
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        role="img"
+        aria-label="Completed"
+      >
+        <path d="M20 6L9 17l-5-5" />
+      </svg>
+    );
+  }
+  if (status === "IN_PROGRESS") {
+    return (
+      <span className={styles.dotProgress} role="img" aria-label="In progress" />
+    );
+  }
+  return <span className={styles.dotPending} role="img" aria-label="Not started" />;
+}
+
 /**
- * Client component only so the active item can follow the URL. Which items
- * exist is decided on the server and passed in as `allowed`, so an unauthorised
- * route name is never shipped to the browser.
+ * Which items exist is decided on the server from the permission matrix, so a
+ * module the user may not view never reaches the browser at all.
  */
-export default function SidebarNav({ allowed }: { allowed: string[] }) {
+export default function SidebarNav({ menu }: { menu: MenuGroup[] }) {
   const pathname = usePathname();
-  const allow = new Set(allowed);
 
   return (
     <nav className={styles.nav}>
-      {NAV.map((group, gi) => {
-        const items = group.items.filter((i) => !i.module || allow.has(i.module));
-        if (items.length === 0) return null;
+      {menu.map((group) => (
+        <div key={group.group}>
+          <div className={styles.groupLabel}>{group.label}</div>
+          {group.items.map((item) => {
+            const active =
+              item.href &&
+              (pathname === item.href || pathname.startsWith(`${item.href}/`));
 
-        return (
-          <div key={group.label ?? `g${gi}`}>
-            {group.label && <div className={styles.groupLabel}>{group.label}</div>}
-            {items.map((item) => {
-              const active =
-                pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const label = (
+              <>
+                <span className={styles.itemLabel}>{item.label}</span>
+                <StatusBadge status={item.status} />
+              </>
+            );
+
+            if (!item.href) {
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={active ? styles.itemActive : styles.item}
+                <span
+                  key={item.moduleCode}
+                  className={styles.itemTodo}
+                  title={item.notes ?? "Not built yet"}
                 >
-                  {item.label}
-                </Link>
+                  {label}
+                </span>
               );
-            })}
-          </div>
-        );
-      })}
+            }
+
+            return (
+              <Link
+                key={item.moduleCode}
+                href={item.href}
+                className={active ? styles.itemActive : styles.item}
+                title={item.notes ?? undefined}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+      ))}
     </nav>
   );
 }
