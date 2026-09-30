@@ -39,6 +39,7 @@ const ROUTES: Record<string, string> = {
   PENDING_APPROVALS: "/admin/pending-approvals",
   TAX_MAINT: "/admin/tax",
   UOM_MAINT: "/admin/uom",
+  ITEM_BRAND_MAINT: "/admin/item-brands",
 };
 
 const GROUP_LABELS: Record<string, string> = {

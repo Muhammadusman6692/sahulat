@@ -1,6 +1,7 @@
 import { requirePermission } from "@/lib/dal";
-import { listCategories, listBrands, listTaxes } from "@/lib/db/items";
+import { listCategories, listTaxes } from "@/lib/db/items";
 import { listUoms } from "@/lib/db/uom";
+import { listBrands } from "@/lib/db/item-brand";
 import { getCompany } from "@/lib/db/companies";
 import ItemForm from "../item-form";
 import BackLink from "@/components/back-link/back-link";

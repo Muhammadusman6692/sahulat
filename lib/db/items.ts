@@ -113,15 +113,6 @@ export async function listCategories(companyId: number) {
   );
 }
 
-export async function listBrands(companyId: number) {
-  return query<{ BRAND_ID: number; BRAND_NAME: string }>(
-    `SELECT brand_id, brand_name
-       FROM item_brand WHERE company_id = :companyId
-      ORDER BY brand_name`,
-    { companyId },
-  );
-}
-
 export async function listTaxes(companyId: number) {
   return query<{ TAX_ID: number; TAX_CODE: string; TAX_NAME: string; TAX_RATE: number }>(
     `SELECT tax_id, tax_code, tax_name, tax_rate

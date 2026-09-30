@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { requirePermission } from "@/lib/dal";
-import { listItems, listBrands, listCategories } from "@/lib/db/items";
+import { listItems, listCategories } from "@/lib/db/items";
+import { listBrands } from "@/lib/db/item-brand";
 import { can } from "@/lib/permissions";
 import { fmtQty, fmtRate } from "@/lib/format";
 import styles from "@/components/data-grid/grid.module.css";
