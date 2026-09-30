@@ -64,11 +64,16 @@ export async function execute(
  * the commit happens once the callback returns, and any throw rolls the whole
  * lot back.
  */
+export type Tx = {
+  query: <R>(sql: string, binds?: oracledb.BindParameters) => Promise<R[]>;
+  execute: (
+    sql: string,
+    binds?: oracledb.BindParameters,
+  ) => Promise<oracledb.Result<unknown>>;
+};
+
 export async function withTransaction<T>(
-  fn: (tx: {
-    query: <R>(sql: string, binds?: oracledb.BindParameters) => Promise<R[]>;
-    execute: (sql: string, binds?: oracledb.BindParameters) => Promise<oracledb.Result<unknown>>;
-  }) => Promise<T>,
+  fn: (tx: Tx) => Promise<T>,
 ): Promise<T> {
   const pool = await getPool();
   const conn = await pool.getConnection();
