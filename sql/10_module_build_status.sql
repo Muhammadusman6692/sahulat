@@ -172,6 +172,13 @@ UPDATE module_function
  WHERE module_code = 'ITEM_MAINT';
 COMMIT;
 
+UPDATE module_function
+   SET build_status = 'COMPLETED',
+       build_notes  = 'List, create and edit approval_rule rows (company/document/step -> approver role + min amount). Document dropdown limited to transactional modules. Verified against the live schema: duplicate (company, module, step) rejected with a readable error.',
+       completed_on = SYSDATE
+ WHERE module_code = 'APPROVAL_MAINT';
+COMMIT;
+
 SELECT module_group, build_status, COUNT(*) AS modules
   FROM module_function
  GROUP BY module_group, build_status
