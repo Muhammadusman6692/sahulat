@@ -122,13 +122,6 @@ export async function listBrands(companyId: number) {
   );
 }
 
-/** Global, not company-scoped — uom is a shared reference table. */
-export async function listUoms() {
-  return query<{ UOM_CODE: string; UOM_NAME: string }>(
-    `SELECT uom_code, uom_name FROM uom ORDER BY uom_code`,
-  );
-}
-
 export async function listTaxes(companyId: number) {
   return query<{ TAX_ID: number; TAX_CODE: string; TAX_NAME: string; TAX_RATE: number }>(
     `SELECT tax_id, tax_code, tax_name, tax_rate

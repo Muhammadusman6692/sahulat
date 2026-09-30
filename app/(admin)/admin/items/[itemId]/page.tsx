@@ -5,9 +5,9 @@ import {
   getItemPriceHistory,
   listCategories,
   listBrands,
-  listUoms,
   listTaxes,
 } from "@/lib/db/items";
+import { listUoms } from "@/lib/db/uom";
 import { getCompany } from "@/lib/db/companies";
 import { can } from "@/lib/permissions";
 import ItemForm from "../item-form";
