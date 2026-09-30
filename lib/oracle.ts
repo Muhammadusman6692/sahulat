@@ -48,11 +48,12 @@ export async function query<T>(
 export async function execute(
   sql: string,
   binds: oracledb.BindParameters = {},
-): Promise<void> {
+): Promise<number> {
   const pool = await getPool();
   const conn = await pool.getConnection();
   try {
-    await conn.execute(sql, binds, { autoCommit: true });
+    const result = await conn.execute(sql, binds, { autoCommit: true });
+    return result.rowsAffected ?? 0;
   } finally {
     await conn.close();
   }

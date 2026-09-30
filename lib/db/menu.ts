@@ -36,6 +36,7 @@ const ROUTES: Record<string, string> = {
   USER_MAINT: "/admin/users",
   ROLE_MAINT: "/admin/roles",
   APPROVAL_MAINT: "/admin/approvals",
+  PENDING_APPROVALS: "/admin/pending-approvals",
   TAX_MAINT: "/admin/tax",
 };
 
