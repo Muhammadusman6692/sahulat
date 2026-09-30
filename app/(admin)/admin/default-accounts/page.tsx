@@ -4,6 +4,7 @@ import {
   getCompanyDefaults,
   listPostableAccounts,
 } from "@/lib/db/default-accounts";
+import { listParentCandidates } from "@/lib/db/coa";
 import { getCompany } from "@/lib/db/companies";
 import DefaultAccountsForm from "./default-accounts-form";
 import styles from "@/components/data-grid/grid.module.css";
@@ -18,11 +19,12 @@ export default async function DefaultAccountsPage() {
     return <p className={styles.empty}>Your account is not scoped to any company.</p>;
   }
 
-  const [company, roles, current, accounts] = await Promise.all([
+  const [company, roles, current, accounts, parentAccounts] = await Promise.all([
     getCompany(companyId),
     listRoles(),
     getCompanyDefaults(companyId),
     listPostableAccounts(companyId),
+    listParentCandidates(companyId),
   ]);
 
   const currentByRole = new Map(current.map((c) => [c.ROLE_CODE, c.COA_ID]));
@@ -53,6 +55,12 @@ export default async function DefaultAccountsPage() {
           code: a.ACCOUNT_CODE,
           name: a.ACCOUNT_NAME,
           nature: a.ACCOUNT_NATURE,
+        }))}
+        parentAccounts={parentAccounts.map((a) => ({
+          coaId: a.COA_ID,
+          code: a.ACCOUNT_CODE,
+          name: a.ACCOUNT_NAME,
+          nature: "",
         }))}
       />
 

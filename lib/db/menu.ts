@@ -41,6 +41,7 @@ const ROUTES: Record<string, string> = {
   UOM_MAINT: "/admin/uom",
   ITEM_CAT_MAINT: "/admin/item-categories",
   ITEM_BRAND_MAINT: "/admin/item-brands",
+  PARTY_MAINT: "/admin/parties",
 };
 
 const GROUP_LABELS: Record<string, string> = {

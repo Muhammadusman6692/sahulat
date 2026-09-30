@@ -1,5 +1,5 @@
 import "server-only";
-import { query, execute } from "@/lib/oracle";
+import { query, execute, type Tx } from "@/lib/oracle";
 import type { AccountNature, NormalSide, ControlType } from "@/lib/coa-types";
 
 export type { AccountNature, NormalSide, ControlType };
@@ -132,4 +132,107 @@ export async function updateCoaAccount(
       WHERE coa_id = :coaId`,
     { ...input, coaId },
   );
+}
+
+export type ControlRole = "AR_CONTROL" | "AP_CONTROL";
+
+/** The level 1-3 parent a company has mapped a control role to, set on the
+ *  Default GL Accounts screen (company_default_account, same table every
+ *  other posting-account role uses). */
+export async function getControlParentCoaId(tx: Tx, companyId: number, role: ControlRole) {
+  const rows = await tx.query<{ COA_ID: number; ACCOUNT_CODE: string; ACCOUNT_LEVEL: number }>(
+    `SELECT c.coa_id, c.account_code, c.account_level
+       FROM company_default_account cda
+       JOIN coa c ON c.coa_id = cda.coa_id
+      WHERE cda.company_id = :companyId AND cda.role_code = :role`,
+    { companyId, role },
+  );
+  return rows[0] ?? null;
+}
+
+/** Next sequential 4-digit child code under a parent, e.g. "1-01-001" -> "1-01-001-0004". */
+async function nextChildAccountCode(tx: Tx, companyId: number, parentCode: string) {
+  const rows = await tx.query<{ MAX_SUFFIX: number }>(
+    `SELECT NVL(MAX(TO_NUMBER(SUBSTR(account_code, LENGTH(:parentCode) + 2))), 0) AS max_suffix
+       FROM coa
+      WHERE company_id = :companyId
+        AND account_code LIKE :pattern`,
+    { companyId, parentCode, pattern: `${parentCode}-%` },
+  );
+  const next = (rows[0]?.MAX_SUFFIX ?? 0) + 1;
+  return `${parentCode}-${String(next).padStart(4, "0")}`;
+}
+
+const CONTROL_ACCOUNT_SHAPE: Record<
+  ControlRole,
+  { nature: AccountNature; normalSide: NormalSide; controlType: Exclude<ControlType, null> }
+> = {
+  AR_CONTROL: { nature: "ASSET", normalSide: "D", controlType: "CUSTOMER" },
+  AP_CONTROL: { nature: "LIABILITY", normalSide: "C", controlType: "SUPPLIER" },
+};
+
+/**
+ * Creates the level-4 ledger account a customer/supplier needs the moment it
+ * is saved — named after the party, filed under the company's AR/AP control
+ * parent. Throws if that parent isn't mapped yet, so a party save fails with
+ * an actionable error instead of guessing where to file the account. Always
+ * called from inside the same transaction as the party write, so the two
+ * rows land together or not at all.
+ */
+export async function createPartyLedgerAccount(
+  tx: Tx,
+  companyId: number,
+  role: ControlRole,
+  partyName: string,
+): Promise<number> {
+  const parent = await getControlParentCoaId(tx, companyId, role);
+  if (!parent) {
+    const label = role === "AR_CONTROL" ? "Accounts Receivable" : "Accounts Payable";
+    throw new Error(
+      `${label} control parent is not set for this company yet — set it on Default GL Accounts first.`,
+    );
+  }
+
+  const shape = CONTROL_ACCOUNT_SHAPE[role];
+  const accountCode = await nextChildAccountCode(tx, companyId, parent.ACCOUNT_CODE);
+
+  // is_postable is a virtual column (derived from account_level = 4) — never
+  // inserted directly, the same reason createCoaAccount above doesn't set it.
+  await tx.execute(
+    `INSERT INTO coa (company_id, account_code, account_name, parent_id, account_level,
+                      account_nature, normal_side, is_control_ac, active_yn)
+     VALUES (:companyId, :accountCode, :accountName, :parentId, :accountLevel,
+             :accountNature, :normalSide, :controlType, 'Y')`,
+    {
+      companyId,
+      accountCode,
+      accountName: partyName,
+      parentId: parent.COA_ID,
+      accountLevel: parent.ACCOUNT_LEVEL + 1,
+      accountNature: shape.nature,
+      normalSide: shape.normalSide,
+      controlType: shape.controlType,
+    },
+  );
+
+  const [created] = await tx.query<{ COA_ID: number }>(
+    `SELECT coa_id FROM coa WHERE company_id = :companyId AND account_code = :accountCode`,
+    { companyId, accountCode },
+  );
+  if (!created) throw new Error("Ledger account row was not found after insert");
+  return created.COA_ID;
+}
+
+export async function renamePartyLedgerAccount(tx: Tx, coaId: number, partyName: string) {
+  await tx.execute(`UPDATE coa SET account_name = :name WHERE coa_id = :coaId`, {
+    name: partyName,
+    coaId,
+  });
+}
+
+export async function setPartyLedgerAccountActive(tx: Tx, coaId: number, activeYn: "Y" | "N") {
+  await tx.execute(`UPDATE coa SET active_yn = :activeYn WHERE coa_id = :coaId`, {
+    activeYn,
+    coaId,
+  });
 }

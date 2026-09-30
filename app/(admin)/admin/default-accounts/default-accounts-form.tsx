@@ -18,14 +18,21 @@ export type AccountOption = {
   nature: string;
 };
 
+/** Roles that point at a level 1-3 grouping account (the parent Party Master
+ *  files auto-created customer/supplier ledger accounts under), not a
+ *  postable level-4 account like every other role here. */
+const PARENT_ROLES = new Set(["AR_CONTROL", "AP_CONTROL"]);
+
 export default function DefaultAccountsForm({
   companyId,
   roles,
   accounts,
+  parentAccounts,
 }: {
   companyId: number;
   roles: RoleField[];
   accounts: AccountOption[];
+  parentAccounts: AccountOption[];
 }) {
   const action = saveDefaultAccountsAction.bind(null, companyId);
   const [state, formAction, pending] = useActionState<FormState, FormData>(action, {});
@@ -69,27 +76,31 @@ export default function DefaultAccountsForm({
         </p>
 
         <div className={styles.section}>
-          {roles.map((r) => (
-            <div className={styles.fieldWide} key={r.code}>
-              <label className={styles.label} htmlFor={`role_${r.code}`}>
-                {r.name}
-              </label>
-              <select
-                id={`role_${r.code}`}
-                name={`role_${r.code}`}
-                className={styles.select}
-                defaultValue={r.currentCoaId ?? ""}
-              >
-                <option value="">— Not set —</option>
-                {accounts.map((a) => (
-                  <option key={a.coaId} value={a.coaId}>
-                    {a.code} — {a.name} ({a.nature})
-                  </option>
-                ))}
-              </select>
-              {r.description && <span className={styles.hint}>{r.description}</span>}
-            </div>
-          ))}
+          {roles.map((r) => {
+            const isParentRole = PARENT_ROLES.has(r.code);
+            const options = isParentRole ? parentAccounts : accounts;
+            return (
+              <div className={styles.fieldWide} key={r.code}>
+                <label className={styles.label} htmlFor={`role_${r.code}`}>
+                  {r.name}
+                </label>
+                <select
+                  id={`role_${r.code}`}
+                  name={`role_${r.code}`}
+                  className={styles.select}
+                  defaultValue={r.currentCoaId ?? ""}
+                >
+                  <option value="">— Not set —</option>
+                  {options.map((a) => (
+                    <option key={a.coaId} value={a.coaId}>
+                      {isParentRole ? `${a.code} — ${a.name}` : `${a.code} — ${a.name} (${a.nature})`}
+                    </option>
+                  ))}
+                </select>
+                {r.description && <span className={styles.hint}>{r.description}</span>}
+              </div>
+            );
+          })}
         </div>
       </div>
 
