@@ -34,7 +34,9 @@ const ROUTES: Record<string, string> = {
   NUMBERING_MAINT: "/admin/numbering-series",
   ITEM_MAINT: "/admin/items",
   USER_MAINT: "/admin/users",
+  ROLE_MAINT: "/admin/roles",
   APPROVAL_MAINT: "/admin/approvals",
+  TAX_MAINT: "/admin/tax",
 };
 
 const GROUP_LABELS: Record<string, string> = {
