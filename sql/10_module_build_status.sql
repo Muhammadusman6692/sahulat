@@ -179,6 +179,13 @@ UPDATE module_function
  WHERE module_code = 'APPROVAL_MAINT';
 COMMIT;
 
+UPDATE module_function
+   SET build_status = 'COMPLETED',
+       build_notes  = 'List, create and edit item_category rows per company (inline add + inline edit, same pattern as UOM Master), with an item count per category. Verified against the live schema: duplicate (company, name) rejected with a readable error.',
+       completed_on = SYSDATE
+ WHERE module_code = 'ITEM_CAT_MAINT';
+COMMIT;
+
 SELECT module_group, build_status, COUNT(*) AS modules
   FROM module_function
  GROUP BY module_group, build_status
