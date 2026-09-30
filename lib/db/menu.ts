@@ -31,6 +31,7 @@ const ROUTES: Record<string, string> = {
   FISCAL_MAINT: "/admin/fiscal-years",
   COA_MAINT: "/admin/coa",
   DEFAULT_ACCT_MAINT: "/admin/default-accounts",
+  NUMBERING_MAINT: "/admin/numbering-series",
   ITEM_MAINT: "/admin/items",
 };
 
