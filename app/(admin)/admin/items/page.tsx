@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { requirePermission } from "@/lib/dal";
 import { listItems, listBrands, listCategories } from "@/lib/db/items";
+import { can } from "@/lib/permissions";
 import { fmtQty, fmtRate } from "@/lib/format";
 import styles from "@/components/data-grid/grid.module.css";
 import ItemsFilters from "./items-filters";
@@ -34,6 +35,8 @@ export default async function ItemsPage({
   const categoryId = toInt(one(sp.category));
   const brandId = toInt(one(sp.brand));
   const includeInactive = one(sp.inactive) === "1";
+  const mayCreate = can(user.permissions, "ITEM_MAINT", "CREATE");
+  const mayEdit = can(user.permissions, "ITEM_MAINT", "EDIT");
 
   const [{ rows, total }, categories, brands] = await Promise.all([
     listItems({
@@ -77,20 +80,22 @@ export default async function ItemsPage({
         <button type="button" className={styles.btn}>
           Export
         </button>
-        <button type="button" className={styles.btnPrimary}>
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.4"
-            strokeLinecap="round"
-          >
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          New item
-        </button>
+        {mayCreate && (
+          <Link href="/admin/items/new" className={styles.btnPrimary}>
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            New item
+          </Link>
+        )}
       </div>
 
       <div className={styles.card}>
@@ -126,6 +131,7 @@ export default async function ItemsPage({
                 <th style={{ textAlign: "right" }}>Reorder</th>
                 <th>Tax</th>
                 <th>Status</th>
+                <th />
               </tr>
             </thead>
             <tbody>
@@ -164,6 +170,13 @@ export default async function ItemsPage({
                         <span className={styles.badgeWarn}>LOW</span>
                       ) : (
                         <span className={styles.badgeOk}>ACTIVE</span>
+                      )}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      {mayEdit && (
+                        <Link href={`/admin/items/${r.ITEM_ID}`} className={styles.pageLink}>
+                          Edit
+                        </Link>
                       )}
                     </td>
                   </tr>
