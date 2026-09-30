@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { requirePermission } from "@/lib/dal";
 import { listScopedCompanies } from "@/lib/db/branches";
 import BranchForm from "../branch-form";
+import BackLink from "@/components/back-link/back-link";
 import styles from "@/components/data-grid/grid.module.css";
 
 export const metadata = { title: "New branch · Sahulat ERP" };
@@ -16,9 +16,7 @@ export default async function NewBranchPage() {
     <div className={styles.page}>
       <div className={styles.header}>
         <div className={styles.grow}>
-          <Link href="/admin/branches" className={styles.note}>
-            ← Branches
-          </Link>
+          <BackLink href="/admin/branches">Branches</BackLink>
           <h1 className={styles.title} style={{ marginTop: 4 }}>
             New branch
           </h1>

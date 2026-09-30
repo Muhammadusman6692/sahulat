@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/dal";
 import { getCompany } from "@/lib/db/companies";
 import CompanyForm from "../company-form";
+import BackLink from "@/components/back-link/back-link";
 import styles from "@/components/data-grid/grid.module.css";
 
 export const metadata = { title: "Edit company · Sahulat ERP" };
@@ -23,9 +23,7 @@ export default async function EditCompanyPage({
     <div className={styles.page}>
       <div className={styles.header}>
         <div className={styles.grow}>
-          <Link href="/admin/companies" className={styles.note}>
-            ← Companies
-          </Link>
+          <BackLink href="/admin/companies">Companies</BackLink>
           <h1 className={styles.title} style={{ marginTop: 4 }}>
             {company.COMPANY_NAME}
           </h1>

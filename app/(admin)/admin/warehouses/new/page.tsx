@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { requirePermission } from "@/lib/dal";
 import { listSelectableBranches } from "@/lib/db/warehouses";
 import WarehouseForm from "../warehouse-form";
+import BackLink from "@/components/back-link/back-link";
 import styles from "@/components/data-grid/grid.module.css";
 
 export const metadata = { title: "New warehouse · Sahulat ERP" };
@@ -16,9 +16,7 @@ export default async function NewWarehousePage() {
     <div className={styles.page}>
       <div className={styles.header}>
         <div className={styles.grow}>
-          <Link href="/admin/warehouses" className={styles.note}>
-            ← Warehouses
-          </Link>
+          <BackLink href="/admin/warehouses">Warehouses</BackLink>
           <h1 className={styles.title} style={{ marginTop: 4 }}>
             New warehouse
           </h1>

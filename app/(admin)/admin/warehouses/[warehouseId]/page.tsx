@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requirePermission, requireScope } from "@/lib/dal";
 import {
@@ -7,6 +6,7 @@ import {
   listSelectableBranches,
 } from "@/lib/db/warehouses";
 import WarehouseForm from "../warehouse-form";
+import BackLink from "@/components/back-link/back-link";
 import styles from "@/components/data-grid/grid.module.css";
 
 export const metadata = { title: "Edit warehouse · Sahulat ERP" };
@@ -35,9 +35,7 @@ export default async function EditWarehousePage({
     <div className={styles.page}>
       <div className={styles.header}>
         <div className={styles.grow}>
-          <Link href="/admin/warehouses" className={styles.note}>
-            ← Warehouses
-          </Link>
+          <BackLink href="/admin/warehouses">Warehouses</BackLink>
           <h1 className={styles.title} style={{ marginTop: 4 }}>
             {warehouse.WAREHOUSE_NAME}
           </h1>

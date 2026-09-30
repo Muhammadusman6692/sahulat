@@ -1,0 +1,24 @@
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  line-height: 1.2;
+}
+
+.link:hover {
+  background: var(--surface-sunken);
+  border-color: var(--border-strong);
+  color: var(--ink);
+}
+
+.link svg {
+  flex-shrink: 0;
+}
