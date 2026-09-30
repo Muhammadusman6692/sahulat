@@ -33,6 +33,7 @@ const ROUTES: Record<string, string> = {
   DEFAULT_ACCT_MAINT: "/admin/default-accounts",
   NUMBERING_MAINT: "/admin/numbering-series",
   ITEM_MAINT: "/admin/items",
+  USER_MAINT: "/admin/users",
 };
 
 const GROUP_LABELS: Record<string, string> = {
