@@ -84,7 +84,7 @@ export async function getUserAccessRows(userId: number): Promise<AccessRow[]> {
   }));
 }
 
-/** Roles module (ROLE_MAINT) doesn't exist yet, so this lives here for now. */
+/** Roles are managed on the ROLE_MAINT page; this just feeds the role picker here. */
 export async function listActiveRoles() {
   return query<{ ROLE_ID: number; ROLE_NAME: string; COMPANY_CODE: string | null }>(
     `SELECT r.role_id, r.role_name, c.company_code
