@@ -70,6 +70,15 @@ END pkg_numbering;
 -- ============================================================================
 CREATE OR REPLACE PACKAGE pkg_posting AS
 
+  -- Raises -20510 if the company has no mapping for p_role_code in
+  -- company_default_account. Exposed on the package spec so the admin
+  -- screen (or a future pre-posting check) can validate a company's setup
+  -- without tripping the error mid-posting.
+  FUNCTION get_default_account (
+    p_company_id IN NUMBER,
+    p_role_code  IN VARCHAR2
+  ) RETURN NUMBER;
+
   PROCEDURE post_sales_invoice (
     p_inv_id  IN NUMBER,
     p_user_id IN NUMBER
@@ -90,6 +99,24 @@ END pkg_posting;
 
 CREATE OR REPLACE PACKAGE BODY pkg_posting AS
 
+  FUNCTION get_default_account (
+    p_company_id IN NUMBER,
+    p_role_code  IN VARCHAR2
+  ) RETURN NUMBER IS
+    v_coa_id NUMBER;
+  BEGIN
+    SELECT coa_id INTO v_coa_id
+      FROM company_default_account
+     WHERE company_id = p_company_id AND role_code = p_role_code;
+    RETURN v_coa_id;
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      RAISE_APPLICATION_ERROR(-20510,
+        'No default GL account configured for role ' || p_role_code ||
+        ' in company ' || p_company_id ||
+        ' - set it on the Default GL Accounts screen before posting.');
+  END get_default_account;
+
   PROCEDURE post_sales_invoice (
     p_inv_id  IN NUMBER,
     p_user_id IN NUMBER
@@ -97,7 +124,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_posting AS
     v_hdr        sales_inv_hdr%ROWTYPE;
     v_voucher_id NUMBER;
     v_ar_coa_id  NUMBER;
-    v_sales_coa_id NUMBER;   -- would come from a company-level default-accounts config
+    v_sales_coa_id NUMBER;
     v_tax_coa_id NUMBER;
   BEGIN
     SELECT * INTO v_hdr FROM sales_inv_hdr WHERE inv_id = p_inv_id FOR UPDATE;
@@ -128,10 +155,9 @@ CREATE OR REPLACE PACKAGE BODY pkg_posting AS
     END LOOP;
 
     -- 3. GL: Dr Customer (AR control) / Cr Sales / Cr Output Tax
-    --    (v_ar_coa_id resolved from party.ar_coa_id; v_sales_coa_id and
-    --    v_tax_coa_id resolved from a company default-accounts config table
-    --    to be added in the Trading-module deliverable)
     SELECT ar_coa_id INTO v_ar_coa_id FROM party WHERE party_id = v_hdr.party_id;
+    v_sales_coa_id := get_default_account(v_hdr.company_id, 'SALES');
+    v_tax_coa_id   := get_default_account(v_hdr.company_id, 'OUTPUT_TAX');
 
     v_voucher_id := pkg_gl.create_voucher(
       p_company_id    => v_hdr.company_id,
@@ -145,9 +171,16 @@ CREATE OR REPLACE PACKAGE BODY pkg_posting AS
     );
 
     pkg_gl.add_line(v_voucher_id, v_ar_coa_id, p_debit => v_hdr.net_amt, p_party_id => v_hdr.party_id);
-    -- pkg_gl.add_line(v_voucher_id, v_sales_coa_id, p_credit => v_hdr.gross_amt - v_hdr.discount_amt);
-    -- pkg_gl.add_line(v_voucher_id, v_tax_coa_id,   p_credit => v_hdr.tax_amt);
-    -- ^ wired once default-accounts config table is added in Trading-module phase
+
+    -- pkg_gl.add_line raises if both debit and credit are zero, so a fully
+    -- discounted line (gross = discount) or an all-exempt invoice (tax = 0)
+    -- skips that line rather than erroring on a legitimate zero amount.
+    IF v_hdr.gross_amt - v_hdr.discount_amt > 0 THEN
+      pkg_gl.add_line(v_voucher_id, v_sales_coa_id, p_credit => v_hdr.gross_amt - v_hdr.discount_amt);
+    END IF;
+    IF v_hdr.tax_amt > 0 THEN
+      pkg_gl.add_line(v_voucher_id, v_tax_coa_id, p_credit => v_hdr.tax_amt);
+    END IF;
 
     pkg_gl.post_voucher(v_voucher_id, p_user_id);
 
@@ -162,6 +195,9 @@ CREATE OR REPLACE PACKAGE BODY pkg_posting AS
     p_user_id IN NUMBER
   ) IS
     v_hdr sales_return_hdr%ROWTYPE;
+    v_voucher_id NUMBER;
+    v_ar_coa_id NUMBER;
+    v_sales_return_coa_id NUMBER;
   BEGIN
     SELECT * INTO v_hdr FROM sales_return_hdr WHERE ret_id = p_ret_id FOR UPDATE;
     IF v_hdr.status != 'DRAFT' THEN
@@ -201,8 +237,31 @@ CREATE OR REPLACE PACKAGE BODY pkg_posting AS
     UPDATE sales_return_hdr
     SET status = 'POSTED'
     WHERE ret_id = p_ret_id;
-    -- GL reversal (Dr Sales Return / Cr Customer) omitted here - identical
-    -- pattern to post_sales_invoice, wired once default-accounts config exists.
+
+    -- GL reversal: Dr Sales Return / Cr Customer. sales_return_hdr carries
+    -- only net_amt (no gross/discount/tax breakdown on the return itself),
+    -- so this is genuinely a two-line entry, not a mirror of the invoice's
+    -- three lines.
+    IF v_hdr.net_amt > 0 THEN
+      SELECT ar_coa_id INTO v_ar_coa_id FROM party WHERE party_id = v_hdr.party_id;
+      v_sales_return_coa_id := get_default_account(v_hdr.company_id, 'SALES_RETURN');
+
+      v_voucher_id := pkg_gl.create_voucher(
+        p_company_id    => v_hdr.company_id,
+        p_branch_id     => v_hdr.branch_id,
+        p_voucher_type  => 'SRET',
+        p_voucher_date  => v_hdr.ret_date,
+        p_source_module => 'SALES_RETURN',
+        p_source_doc_id => v_hdr.ret_id,
+        p_narration     => 'Sales Return ' || v_hdr.ret_no,
+        p_user_id       => p_user_id
+      );
+
+      pkg_gl.add_line(v_voucher_id, v_sales_return_coa_id, p_debit => v_hdr.net_amt);
+      pkg_gl.add_line(v_voucher_id, v_ar_coa_id, p_credit => v_hdr.net_amt, p_party_id => v_hdr.party_id);
+
+      pkg_gl.post_voucher(v_voucher_id, p_user_id);
+    END IF;
   END post_sales_return;
 
   PROCEDURE post_stock_transfer (

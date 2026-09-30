@@ -30,6 +30,7 @@ const ROUTES: Record<string, string> = {
   WAREHOUSE_MAINT: "/admin/warehouses",
   FISCAL_MAINT: "/admin/fiscal-years",
   COA_MAINT: "/admin/coa",
+  DEFAULT_ACCT_MAINT: "/admin/default-accounts",
   ITEM_MAINT: "/admin/items",
 };
 
