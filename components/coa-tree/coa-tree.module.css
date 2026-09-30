@@ -1,0 +1,134 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 14px;
+  border-bottom: 1px solid #f2f0eb;
+  font-size: 12px;
+}
+
+.row:hover {
+  background: #fcfbf8;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.rowInactive {
+  composes: row;
+}
+
+.rowLink {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-grow: 1;
+  min-width: 0;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.rowLink:hover {
+  color: var(--ink);
+}
+
+.rowInactive .rowLink {
+  color: var(--ink-disabled);
+}
+
+.toggle {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.toggleSpacer {
+  width: 16px;
+  flex-shrink: 0;
+}
+
+.code {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.name {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.levelBadge {
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+  color: #ffffff;
+}
+
+.level1 {
+  composes: levelBadge;
+  background: var(--chrome);
+}
+
+.level2 {
+  composes: levelBadge;
+  background: #3e5c54;
+}
+
+.level3 {
+  composes: levelBadge;
+  background: #7fa69c;
+}
+
+.level4 {
+  composes: levelBadge;
+  background: var(--primary);
+}
+
+.controlTag {
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  color: var(--primary);
+  font-size: 9px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.natureTag {
+  color: var(--ink-3);
+  font-size: 11px;
+  flex-shrink: 0;
+  width: 64px;
+}
+
+.inactiveBadge {
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: #f0eee8;
+  color: var(--ink-3);
+  font-size: 9px;
+  font-weight: 600;
+  flex-shrink: 0;
+}

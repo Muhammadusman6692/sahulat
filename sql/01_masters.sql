@@ -76,19 +76,48 @@ CREATE TABLE coa (
 CREATE INDEX ix_coa_parent ON coa(parent_id);
 
 -- Level-consistency guard: a child's level must be exactly parent's level + 1
+--
+-- The self-query below only runs on INSERT, or on UPDATE when parent_id or
+-- account_level actually changed. An unconditional self-query on every UPDATE
+-- (the form this trigger originally took) raises ORA-04091 "table is
+-- mutating" on Oracle: a BEFORE ROW trigger may not SELECT the table it fires
+-- on while that table has a row mid-UPDATE, even for a single-row statement
+-- touching unrelated columns. INSERT is exempt from this restriction (the row
+-- being inserted isn't yet part of the data the self-query could see), which
+-- is why this went unnoticed until the first UPDATE to any level 2-4 row —
+-- confirmed by reproducing both the failure and the INSERT-only exemption
+-- directly against the live schema before this fix.
+--
+-- Residual limitation, left deliberately rather than papered over: an UPDATE
+-- that actually changes parent_id or account_level still hits ORA-04091,
+-- valid new combination or not, because the mutating-table restriction on a
+-- BEFORE ROW trigger's self-query applies regardless of whether the change
+-- would pass. Fixing that fully needs a compound trigger with a statement-
+-- level deferred check, a larger rewrite this fix does not attempt. In
+-- practice this is not a gap: no application code reparents an existing
+-- account (see lib/db/coa.ts - parent_id and account_level are excluded from
+-- every UPDATE this app sends, on purpose, since gl_voucher_line references
+-- coa_id directly and reparenting a posted-to account would silently change
+-- what its history rolls up into).
 CREATE OR REPLACE TRIGGER trg_coa_level_chk
 BEFORE INSERT OR UPDATE ON coa
 FOR EACH ROW
 DECLARE
   v_parent_level NUMBER;
+  v_check_needed BOOLEAN :=
+    INSERTING OR
+    NVL(:NEW.parent_id, -1) != NVL(:OLD.parent_id, -1) OR
+    :NEW.account_level != :OLD.account_level;
 BEGIN
-  IF :NEW.parent_id IS NOT NULL THEN
-    SELECT account_level INTO v_parent_level FROM coa WHERE coa_id = :NEW.parent_id;
-    IF :NEW.account_level != v_parent_level + 1 THEN
-      RAISE_APPLICATION_ERROR(-20001, 'COA level must be parent level + 1');
+  IF v_check_needed THEN
+    IF :NEW.parent_id IS NOT NULL THEN
+      SELECT account_level INTO v_parent_level FROM coa WHERE coa_id = :NEW.parent_id;
+      IF :NEW.account_level != v_parent_level + 1 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'COA level must be parent level + 1');
+      END IF;
+    ELSIF :NEW.account_level != 1 THEN
+      RAISE_APPLICATION_ERROR(-20002, 'Only Group (level 1) accounts may have no parent');
     END IF;
-  ELSIF :NEW.account_level != 1 THEN
-    RAISE_APPLICATION_ERROR(-20002, 'Only Group (level 1) accounts may have no parent');
   END IF;
 END;
 /

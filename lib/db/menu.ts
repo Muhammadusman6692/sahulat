@@ -29,6 +29,7 @@ const ROUTES: Record<string, string> = {
   BRANCH_MAINT: "/admin/branches",
   WAREHOUSE_MAINT: "/admin/warehouses",
   FISCAL_MAINT: "/admin/fiscal-years",
+  COA_MAINT: "/admin/coa",
   ITEM_MAINT: "/admin/items",
 };
 
