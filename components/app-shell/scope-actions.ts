@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { verifySession } from "@/lib/dal";
 import { ACTIVE_COMPANY_COOKIE } from "@/lib/active-scope";
 
@@ -28,5 +29,10 @@ export async function switchCompanyAction(formData: FormData): Promise<void> {
     maxAge: 60 * 60 * 24 * 365,
   });
 
+  // The cookie mutation alone isn't reliably picked up by the redirect's own
+  // render when the destination is the route the action was invoked from —
+  // force the whole layout tree (where the scope pill reads the cookie) to
+  // be treated as stale before navigating.
+  revalidatePath("/", "layout");
   redirect("/dashboard");
 }
