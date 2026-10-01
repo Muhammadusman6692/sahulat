@@ -1,4 +1,5 @@
 import { requirePermission } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import { getCompany } from "@/lib/db/companies";
 import PartyForm from "../party-form";
 import BackLink from "@/components/back-link/back-link";
@@ -8,7 +9,7 @@ export const metadata = { title: "New party · Sahulat ERP" };
 
 export default async function NewPartyPage() {
   const user = await requirePermission("PARTY_MAINT", "CREATE");
-  const companyId = user.access[0]?.companyId;
+  const companyId = await getActiveCompanyId(user.access);
 
   if (!companyId) {
     return <p className={styles.empty}>Your account is not scoped to any company.</p>;

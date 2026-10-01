@@ -1,4 +1,5 @@
 import { requirePermission } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import { listApprovableModules, listApproverRoles } from "@/lib/db/approvals";
 import { getCompany } from "@/lib/db/companies";
 import ApprovalRuleForm from "../approval-rule-form";
@@ -9,7 +10,7 @@ export const metadata = { title: "New approval rule · Sahulat ERP" };
 
 export default async function NewApprovalRulePage() {
   const user = await requirePermission("APPROVAL_MAINT", "CREATE");
-  const companyId = user.access[0]?.companyId;
+  const companyId = await getActiveCompanyId(user.access);
 
   if (!companyId) {
     return <p className={styles.empty}>Your account is not scoped to any company.</p>;

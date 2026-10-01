@@ -1,4 +1,5 @@
 import { requirePermission } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import { listAuthorities } from "@/lib/db/tax";
 import { listPostableAccounts } from "@/lib/db/default-accounts";
 import { getCompany } from "@/lib/db/companies";
@@ -10,7 +11,7 @@ export const metadata = { title: "New tax code · Sahulat ERP" };
 
 export default async function NewTaxCodePage() {
   const user = await requirePermission("TAX_MAINT", "CREATE");
-  const companyId = user.access[0]?.companyId;
+  const companyId = await getActiveCompanyId(user.access);
 
   if (!companyId) {
     return <p className={styles.empty}>Your account is not scoped to any company.</p>;

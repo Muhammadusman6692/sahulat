@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requirePermission } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import { listCoaFlat, buildCoaTree } from "@/lib/db/coa";
 import { can } from "@/lib/permissions";
 import CoaTree from "@/components/coa-tree/coa-tree";
@@ -16,9 +17,8 @@ export default async function CoaPage({
     (Array.isArray(sp.inactive) ? sp.inactive[0] : sp.inactive) === "1";
 
   // Chart of accounts is company-specific by design (docs/01_masters.sql), so
-  // this shows the first company the user is scoped to — the topbar's scope
-  // selector is where switching company belongs once that exists.
-  const companyId = user.access[0]?.companyId;
+  // this shows whichever company the topbar's scope switcher has active.
+  const companyId = await getActiveCompanyId(user.access);
   const mayCreate = can(user.permissions, "COA_MAINT", "CREATE");
 
   if (!companyId) {

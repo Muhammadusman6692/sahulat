@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requirePermission } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import { listApprovalRules } from "@/lib/db/approvals";
 import { can } from "@/lib/permissions";
 import styles from "@/components/data-grid/grid.module.css";
@@ -12,7 +13,7 @@ function money(n: number) {
 
 export default async function ApprovalRulesPage() {
   const user = await requirePermission("APPROVAL_MAINT", "VIEW");
-  const companyId = user.access[0]?.companyId;
+  const companyId = await getActiveCompanyId(user.access);
 
   if (!companyId) {
     return <p className={styles.empty}>Your account is not scoped to any company.</p>;

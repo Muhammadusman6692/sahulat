@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requirePermission } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import { listSeries } from "@/lib/db/numbering";
 import { can } from "@/lib/permissions";
 import styles from "@/components/data-grid/grid.module.css";
@@ -12,7 +13,7 @@ function preview(prefix: string | null, nextNumber: number, padLength: number) {
 
 export default async function NumberingSeriesPage() {
   const user = await requirePermission("NUMBERING_MAINT", "VIEW");
-  const companyId = user.access[0]?.companyId;
+  const companyId = await getActiveCompanyId(user.access);
 
   if (!companyId) {
     return <p className={styles.empty}>Your account is not scoped to any company.</p>;

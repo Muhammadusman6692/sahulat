@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requirePermission, requireScope } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import { createCategory, updateCategory, getCategory } from "@/lib/db/item-categories";
 import { describeOracleError } from "@/lib/db/errors";
 
@@ -27,7 +28,7 @@ export async function createCategoryAction(
   formData: FormData,
 ): Promise<FormState> {
   const user = await requirePermission("ITEM_CAT_MAINT", "CREATE");
-  const companyId = user.access[0]?.companyId;
+  const companyId = await getActiveCompanyId(user.access);
   if (!companyId) return { error: "Your account is not scoped to any company." };
   await requireScope(companyId);
 

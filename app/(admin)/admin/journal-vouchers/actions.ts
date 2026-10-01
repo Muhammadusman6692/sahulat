@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requirePermission, requireScope } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import { listPostableAccounts } from "@/lib/db/coa";
 import {
   createJournalVoucherDraft,
@@ -97,7 +98,7 @@ export async function createDraftAction(
   formData: FormData,
 ): Promise<FormState> {
   const user = await requirePermission("JV_ENTRY", "CREATE");
-  const companyId = user.access[0]?.companyId;
+  const companyId = await getActiveCompanyId(user.access);
   if (!companyId) return { error: "Your account is not scoped to any company." };
 
   const parsedHeader = headerSchema.safeParse({

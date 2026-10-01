@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { requirePermission } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import { listJournalVouchers, type JvStatus } from "@/lib/db/journal-vouchers";
 import { listBranches } from "@/lib/db/branches";
 import { can } from "@/lib/permissions";
@@ -40,7 +41,7 @@ export default async function JournalVouchersPage({
   const sp = await searchParams;
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
-  const companyId = user.access[0]?.companyId;
+  const companyId = await getActiveCompanyId(user.access);
   if (!companyId) {
     return <p className={styles.empty}>Your account is not scoped to any company.</p>;
   }

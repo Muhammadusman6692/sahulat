@@ -1,4 +1,5 @@
 import { requirePermission } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import { listMyPendingApprovals } from "@/lib/db/approval-instances";
 import ApprovalActionRow from "./approval-action-row";
 import styles from "@/components/data-grid/grid.module.css";
@@ -22,7 +23,7 @@ function timeAgo(d: Date) {
 
 export default async function PendingApprovalsPage() {
   const user = await requirePermission("PENDING_APPROVALS", "VIEW");
-  const companyId = user.access[0]?.companyId;
+  const companyId = await getActiveCompanyId(user.access);
 
   if (!companyId) {
     return <p className={styles.empty}>Your account is not scoped to any company.</p>;

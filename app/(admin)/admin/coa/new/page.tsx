@@ -1,4 +1,5 @@
 import { requirePermission } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import { listParentCandidates } from "@/lib/db/coa";
 import { getCompany } from "@/lib/db/companies";
 import CoaForm from "../coa-form";
@@ -9,7 +10,7 @@ export const metadata = { title: "New account · Sahulat ERP" };
 
 export default async function NewCoaAccountPage() {
   const user = await requirePermission("COA_MAINT", "CREATE");
-  const companyId = user.access[0]?.companyId;
+  const companyId = await getActiveCompanyId(user.access);
 
   if (!companyId) {
     return <p className={styles.empty}>Your account is not scoped to any company.</p>;

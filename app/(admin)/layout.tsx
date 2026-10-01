@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { verifySession } from "@/lib/dal";
-import { getScopeLabels } from "@/lib/db/scope";
+import { getActiveCompanyId } from "@/lib/active-scope";
+import { getScopeLabels, listAccessibleCompanies } from "@/lib/db/scope";
 import { getMenu } from "@/lib/db/menu";
 import SidebarNav from "@/components/app-shell/sidebar-nav";
 import SignOutButton from "@/components/app-shell/sign-out-button";
+import CompanySwitcher from "@/components/app-shell/company-switcher";
 import { ModuleIcon } from "@/components/app-shell/module-icons";
 import styles from "@/components/app-shell/shell.module.css";
 
@@ -12,9 +14,11 @@ export default async function AdminLayout({ children }: LayoutProps<"/">) {
   // do not re-render on navigation and cannot stop a child segment from
   // running, so each page calls requirePermission for itself.
   const user = await verifySession();
-  const [scope, menu] = await Promise.all([
-    getScopeLabels(user.access),
+  const activeCompanyId = await getActiveCompanyId(user.access);
+  const [scope, menu, companies] = await Promise.all([
+    getScopeLabels(user.access, activeCompanyId),
     getMenu(user.permissions),
+    listAccessibleCompanies(user.access),
   ]);
 
   const initials = user.fullName
@@ -66,7 +70,11 @@ export default async function AdminLayout({ children }: LayoutProps<"/">) {
               <span className={styles.scopeDivider} />
               <span className={styles.scopeSeg}>
                 <ModuleIcon icon="building" className={styles.scopeSegIcon} />
-                <span className={styles.scopeSegStrong}>{scope.company}</span>
+                {companies.length > 1 && activeCompanyId !== undefined ? (
+                  <CompanySwitcher companies={companies} activeCompanyId={activeCompanyId} />
+                ) : (
+                  <span className={styles.scopeSegStrong}>{scope.company}</span>
+                )}
               </span>
               <span className={styles.scopeDivider} />
               <span className={styles.scopeSeg}>

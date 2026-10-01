@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requirePermission } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import { listAuthorities, listTaxCodes } from "@/lib/db/tax";
 import { can } from "@/lib/permissions";
 import AuthoritiesPanel from "./authorities-panel";
@@ -16,7 +17,7 @@ const TAX_TYPE_LABEL: Record<string, string> = {
 
 export default async function TaxPage() {
   const user = await requirePermission("TAX_MAINT", "VIEW");
-  const companyId = user.access[0]?.companyId;
+  const companyId = await getActiveCompanyId(user.access);
 
   if (!companyId) {
     return <p className={styles.empty}>Your account is not scoped to any company.</p>;

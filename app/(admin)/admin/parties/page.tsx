@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { requirePermission } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import { listParties } from "@/lib/db/parties";
 import { can } from "@/lib/permissions";
 import { fmtMoney } from "@/lib/format";
@@ -24,7 +25,7 @@ export default async function PartiesPage({
   const sp = await searchParams;
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
-  const companyId = user.access[0]?.companyId;
+  const companyId = await getActiveCompanyId(user.access);
   if (!companyId) {
     return <p className={styles.empty}>Your account is not scoped to any company.</p>;
   }

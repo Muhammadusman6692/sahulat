@@ -1,4 +1,5 @@
 import { requirePermission } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import {
   listRoles,
   getCompanyDefaults,
@@ -13,7 +14,7 @@ export const metadata = { title: "Default GL Accounts · Sahulat ERP" };
 
 export default async function DefaultAccountsPage() {
   const user = await requirePermission("DEFAULT_ACCT_MAINT", "VIEW");
-  const companyId = user.access[0]?.companyId;
+  const companyId = await getActiveCompanyId(user.access);
 
   if (!companyId) {
     return <p className={styles.empty}>Your account is not scoped to any company.</p>;

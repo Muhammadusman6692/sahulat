@@ -1,4 +1,5 @@
 import { requirePermission } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import { getCompany } from "@/lib/db/companies";
 import { listBranches } from "@/lib/db/branches";
 import { listPostableAccounts } from "@/lib/db/coa";
@@ -11,7 +12,7 @@ export const metadata = { title: "New Journal Voucher · Sahulat ERP" };
 
 export default async function NewJournalVoucherPage() {
   const user = await requirePermission("JV_ENTRY", "CREATE");
-  const companyId = user.access[0]?.companyId;
+  const companyId = await getActiveCompanyId(user.access);
 
   if (!companyId) {
     return <p className={styles.empty}>Your account is not scoped to any company.</p>;

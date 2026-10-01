@@ -1,4 +1,5 @@
 import { requirePermission } from "@/lib/dal";
+import { getActiveCompanyId } from "@/lib/active-scope";
 import { listBrands } from "@/lib/db/item-brand";
 import { can } from "@/lib/permissions";
 import BrandPanel from "./brand-panel";
@@ -8,7 +9,7 @@ export const metadata = { title: "Item Brand · Sahulat ERP" };
 
 export default async function ItemBrandPage() {
   const user = await requirePermission("ITEM_BRAND_MAINT", "VIEW");
-  const companyId = user.access[0]?.companyId;
+  const companyId = await getActiveCompanyId(user.access);
 
   if (!companyId) {
     return <p className={styles.empty}>Your account is not scoped to any company.</p>;
