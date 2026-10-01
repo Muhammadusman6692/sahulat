@@ -65,6 +65,7 @@ const ROUTES: Record<string, string> = {
   ITEM_BRAND_MAINT: "/admin/item-brands",
   PARTY_MAINT: "/admin/parties",
   JV_ENTRY: "/admin/journal-vouchers",
+  CASH_VOUCHER: "/admin/cash-vouchers",
 };
 
 const GROUP_LABELS: Record<string, string> = {
