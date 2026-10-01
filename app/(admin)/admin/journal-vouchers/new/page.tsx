@@ -1,0 +1,65 @@
+import { requirePermission } from "@/lib/dal";
+import { getCompany } from "@/lib/db/companies";
+import { listBranches } from "@/lib/db/branches";
+import { listPostableAccounts } from "@/lib/db/coa";
+import { listParties } from "@/lib/db/parties";
+import JvForm from "../jv-form";
+import BackLink from "@/components/back-link/back-link";
+import styles from "@/components/data-grid/grid.module.css";
+
+export const metadata = { title: "New Journal Voucher · Sahulat ERP" };
+
+export default async function NewJournalVoucherPage() {
+  const user = await requirePermission("JV_ENTRY", "CREATE");
+  const companyId = user.access[0]?.companyId;
+
+  if (!companyId) {
+    return <p className={styles.empty}>Your account is not scoped to any company.</p>;
+  }
+
+  const [company, branches, accounts, customers, suppliers] = await Promise.all([
+    getCompany(companyId),
+    listBranches([companyId], false),
+    listPostableAccounts(companyId),
+    listParties({ companyId, type: "CUSTOMER", page: 1, pageSize: 1000 }),
+    listParties({ companyId, type: "SUPPLIER", page: 1, pageSize: 1000 }),
+  ]);
+
+  return (
+    <div className={styles.page}>
+      <div className={styles.header}>
+        <div className={styles.grow}>
+          <BackLink href="/admin/journal-vouchers">Journal Vouchers</BackLink>
+          <h1 className={styles.title} style={{ marginTop: 4 }}>
+            New Journal Voucher
+          </h1>
+          <p className={styles.subtitle}>
+            Debit and credit totals must match before it can be saved.
+          </p>
+        </div>
+      </div>
+
+      <JvForm
+        mode="create"
+        companyLabel={company ? `${company.COMPANY_CODE} — ${company.COMPANY_NAME}` : ""}
+        branches={branches.map((b) => ({ id: b.BRANCH_ID, code: b.BRANCH_CODE, name: b.BRANCH_NAME }))}
+        accounts={accounts.map((a) => ({
+          id: a.COA_ID,
+          code: a.ACCOUNT_CODE,
+          name: a.ACCOUNT_NAME,
+          controlType: a.IS_CONTROL_AC,
+        }))}
+        customers={customers.rows.map((p) => ({ id: p.PARTY_ID, name: p.PARTY_NAME }))}
+        suppliers={suppliers.rows.map((p) => ({ id: p.PARTY_ID, name: p.PARTY_NAME }))}
+        initial={{
+          branchId: branches[0]?.BRANCH_ID ?? 0,
+          branchLabel: "",
+          voucherDate: new Date().toISOString().slice(0, 10),
+          voucherNo: null,
+          narration: "",
+          lines: [],
+        }}
+      />
+    </div>
+  );
+}

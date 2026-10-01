@@ -34,6 +34,22 @@ export async function listCoaFlat(companyId: number, includeInactive: boolean) {
   );
 }
 
+/** Level-4 (postable) accounts a GL line can be coded to, e.g. for Journal
+ *  Voucher entry. IS_CONTROL_AC drives whether a line needs a party. */
+export async function listPostableAccounts(companyId: number) {
+  return query<CoaRow>(
+    `SELECT coa_id, company_id, account_code, account_name, parent_id,
+            account_level, account_nature, normal_side, is_postable,
+            is_control_ac, cost_center_required, active_yn
+       FROM coa
+      WHERE company_id = :companyId
+        AND is_postable = 'Y'
+        AND active_yn = 'Y'
+      ORDER BY account_code`,
+    { companyId },
+  );
+}
+
 /** Builds the nested tree from the flat, company-scoped row list. */
 export function buildCoaTree(rows: CoaRow[]): CoaNode[] {
   const byId = new Map<number, CoaNode>();
