@@ -188,36 +188,63 @@
   z-index: 5;
 }
 
-.scopeLabel {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
-}
-
-.scopeGroup {
+.scopePill {
   display: flex;
   align-items: center;
-  gap: 8px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  padding: 0 4px;
 }
 
-.scopeField {
+.scopeTag {
   display: flex;
   align-items: center;
   gap: 5px;
+  background: var(--primary-tint);
+  color: var(--primary-ink);
+  border-radius: 999px;
+  padding: 3px 10px 3px 8px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-right: 2px;
 }
 
-.scopeName {
-  font-size: 11px;
+.scopeTagIcon {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+}
+
+.scopeDivider {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.scopeSeg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.scopeSegStrong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.scopeSegIcon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
   color: var(--ink-3);
-}
-
-.scopeValue {
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 5px 7px;
-  font-size: 12px;
-  background: var(--surface);
 }
 
 .spacer {

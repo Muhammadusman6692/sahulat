@@ -4,6 +4,7 @@ import { getScopeLabels } from "@/lib/db/scope";
 import { getMenu } from "@/lib/db/menu";
 import SidebarNav from "@/components/app-shell/sidebar-nav";
 import SignOutButton from "@/components/app-shell/sign-out-button";
+import { ModuleIcon } from "@/components/app-shell/module-icons";
 import styles from "@/components/app-shell/shell.module.css";
 
 export default async function AdminLayout({ children }: LayoutProps<"/">) {
@@ -57,19 +58,25 @@ export default async function AdminLayout({ children }: LayoutProps<"/">) {
       <div className={styles.main}>
         <header className={styles.topbar}>
           {scope && (
-            <div className={styles.scopeGroup}>
-              <span className={styles.scopeLabel}>SCOPE</span>
-              <span className={styles.scopeField}>
-                <span className={styles.scopeName}>Company</span>
-                <span className={styles.scopeValue}>{scope.company}</span>
+            <div className={styles.scopePill}>
+              <span className={styles.scopeTag}>
+                <ModuleIcon icon="grid" className={styles.scopeTagIcon} />
+                SCOPE
               </span>
-              <span className={styles.scopeField}>
-                <span className={styles.scopeName}>Branch</span>
-                <span className={styles.scopeValue}>{scope.branch}</span>
+              <span className={styles.scopeDivider} />
+              <span className={styles.scopeSeg}>
+                <ModuleIcon icon="building" className={styles.scopeSegIcon} />
+                <span className={styles.scopeSegStrong}>{scope.company}</span>
               </span>
-              <span className={styles.scopeField}>
-                <span className={styles.scopeName}>Warehouse</span>
-                <span className={styles.scopeValue}>{scope.warehouse}</span>
+              <span className={styles.scopeDivider} />
+              <span className={styles.scopeSeg}>
+                <ModuleIcon icon="mapPin" className={styles.scopeSegIcon} />
+                {scope.branch}
+              </span>
+              <span className={styles.scopeDivider} />
+              <span className={styles.scopeSeg}>
+                <ModuleIcon icon="box" className={styles.scopeSegIcon} />
+                {scope.warehouse}
               </span>
             </div>
           )}
