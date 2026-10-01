@@ -161,6 +161,13 @@
   background: var(--surface-sunken);
 }
 
+/* A disabled button must never engage :hover styling — otherwise .btn:hover's
+   off-white background (more specific than .btnPrimary's own background)
+   wins while .btnPrimary's white text stays, making the label unreadable. */
+.btn:disabled {
+  pointer-events: none;
+}
+
 .btnPrimary {
   composes: btn;
   border-color: var(--primary);
