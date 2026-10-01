@@ -5,19 +5,41 @@ import type { PermissionMap } from "@/lib/permissions";
 
 export type BuildStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED";
 
+export type ModuleType = "SETUP" | "TRANSACTION" | "REPORT";
+
 export type MenuItem = {
   moduleCode: string;
   label: string;
   href: string | null;
   status: BuildStatus;
   notes: string | null;
+  type: ModuleType;
+};
+
+/**
+ * One cluster of items inside a module group, all of the same kind. `label`
+ * is null when the group is a single kind end to end (e.g. ADMIN is almost
+ * all Setup) — labelling that would just repeat the group name.
+ */
+export type MenuSection = {
+  type: ModuleType;
+  label: string | null;
+  items: MenuItem[];
 };
 
 export type MenuGroup = {
   group: string;
   label: string;
-  items: MenuItem[];
+  sections: MenuSection[];
 };
+
+const TYPE_LABELS: Record<ModuleType, string> = {
+  SETUP: "Setup",
+  TRANSACTION: "Transactions",
+  REPORT: "Reports",
+};
+
+const TYPE_ORDER: ModuleType[] = ["SETUP", "TRANSACTION", "REPORT"];
 
 /**
  * Where a module's screen lives. A module with no entry here has not been
@@ -68,6 +90,7 @@ type Row = {
   MODULE_CODE: string;
   MODULE_NAME: string;
   MODULE_GROUP: string;
+  MODULE_TYPE: ModuleType;
   BUILD_STATUS: BuildStatus;
   BUILD_NOTES: string | null;
 };
@@ -79,7 +102,7 @@ type Row = {
  */
 export async function getMenu(permissions: PermissionMap): Promise<MenuGroup[]> {
   const rows = await query<Row>(
-    `SELECT module_code, module_name, module_group, build_status, build_notes
+    `SELECT module_code, module_name, module_group, module_type, build_status, build_notes
        FROM module_function
       WHERE module_group != 'LEGACY'
       ORDER BY sort_order`,
@@ -95,6 +118,7 @@ export async function getMenu(permissions: PermissionMap): Promise<MenuGroup[]> 
       href: ROUTES[r.MODULE_CODE] ?? null,
       status: r.BUILD_STATUS,
       notes: r.BUILD_NOTES,
+      type: r.MODULE_TYPE,
     });
     byGroup.set(r.MODULE_GROUP, list);
   }
@@ -102,7 +126,24 @@ export async function getMenu(permissions: PermissionMap): Promise<MenuGroup[]> 
   return GROUP_ORDER.filter((g) => byGroup.get(g)?.length).map((g) => ({
     group: g,
     label: GROUP_LABELS[g] ?? g,
-    items: byGroup.get(g)!,
+    sections: toSections(byGroup.get(g)!),
+  }));
+}
+
+/**
+ * Splits a group's items into Setup/Transaction/Report clusters, in that
+ * fixed order, each keeping the items' original sort_order. A group that is
+ * only one type comes back as a single unlabelled section.
+ */
+function toSections(items: MenuItem[]): MenuSection[] {
+  const distinctTypes = new Set(items.map((i) => i.type));
+  if (distinctTypes.size <= 1) {
+    return [{ type: items[0].type, label: null, items }];
+  }
+  return TYPE_ORDER.filter((t) => distinctTypes.has(t)).map((t) => ({
+    type: t,
+    label: TYPE_LABELS[t],
+    items: items.filter((i) => i.type === t),
   }));
 }
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { MenuGroup } from "@/lib/db/menu";
+import { ModuleIcon, MODULE_ICON, SECTION_ICON } from "./module-icons";
 import styles from "./shell.module.css";
 
 // A <title> child is only valid inside <svg>; inside a <span> the browser
@@ -47,41 +48,52 @@ export default function SidebarNav({ menu }: { menu: MenuGroup[] }) {
       {menu.map((group) => (
         <div key={group.group}>
           <div className={styles.groupLabel}>{group.label}</div>
-          {group.items.map((item) => {
-            const active =
-              item.href &&
-              (pathname === item.href || pathname.startsWith(`${item.href}/`));
+          {group.sections.map((section) => (
+            <div key={section.type}>
+              {section.label && (
+                <div className={styles.sectionLabel}>
+                  <ModuleIcon icon={SECTION_ICON[section.type]} className={styles.sectionIcon} />
+                  {section.label}
+                </div>
+              )}
+              {section.items.map((item) => {
+                const active =
+                  item.href &&
+                  (pathname === item.href || pathname.startsWith(`${item.href}/`));
 
-            const label = (
-              <>
-                <span className={styles.itemLabel}>{item.label}</span>
-                <StatusBadge status={item.status} />
-              </>
-            );
+                const label = (
+                  <>
+                    <ModuleIcon icon={MODULE_ICON[item.moduleCode]} className={styles.itemIcon} />
+                    <span className={styles.itemLabel}>{item.label}</span>
+                    <StatusBadge status={item.status} />
+                  </>
+                );
 
-            if (!item.href) {
-              return (
-                <span
-                  key={item.moduleCode}
-                  className={styles.itemTodo}
-                  title={item.notes ?? "Not built yet"}
-                >
-                  {label}
-                </span>
-              );
-            }
+                if (!item.href) {
+                  return (
+                    <span
+                      key={item.moduleCode}
+                      className={styles.itemTodo}
+                      title={item.notes ?? "Not built yet"}
+                    >
+                      {label}
+                    </span>
+                  );
+                }
 
-            return (
-              <Link
-                key={item.moduleCode}
-                href={item.href}
-                className={active ? styles.itemActive : styles.item}
-                title={item.notes ?? undefined}
-              >
-                {label}
-              </Link>
-            );
-          })}
+                return (
+                  <Link
+                    key={item.moduleCode}
+                    href={item.href}
+                    className={active ? styles.itemActive : styles.item}
+                    title={item.notes ?? undefined}
+                  >
+                    {label}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </div>
       ))}
     </nav>

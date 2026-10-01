@@ -66,15 +66,38 @@
   color: #6f837d;
 }
 
+.sectionLabel {
+  padding: 7px 10px 3px 15px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #51625c;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sectionIcon {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+}
+
 .item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 7px 10px;
   border-radius: var(--radius);
   color: var(--chrome-ink-2);
   text-decoration: none;
   font-size: 13px;
+}
+
+.itemIcon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  opacity: 0.75;
 }
 
 .itemLabel {
@@ -124,6 +147,11 @@
   background: var(--primary);
   color: #ffffff;
   font-weight: 500;
+}
+
+.itemActive .itemIcon,
+.item:hover .itemIcon {
+  opacity: 1;
 }
 
 .itemActive:hover {
