@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { createFiscalYearAction, type NewFormState } from "./actions";
 import { fiscalYearEnd, suggestFyName } from "@/lib/fiscal-calendar";
+import { LockedField } from "@/components/form/locked-field";
 import styles from "@/components/form/form.module.css";
 
 export type CompanyOption = {
@@ -144,16 +145,7 @@ export default function NewFiscalYearForm({
 
           <div className={styles.field}>
             <span className={styles.label}>End date</span>
-            <input
-              className={`${styles.input} ${styles.mono}`}
-              value={
-                endDate
-                  ? endDate.toISOString().slice(0, 10)
-                  : ""
-              }
-              disabled
-              readOnly
-            />
+            <LockedField value={endDate ? endDate.toISOString().slice(0, 10) : ""} mono />
             <span className={styles.hint}>
               Always exactly one year after the start, so twelve regular
               monthly periods fit inside it.

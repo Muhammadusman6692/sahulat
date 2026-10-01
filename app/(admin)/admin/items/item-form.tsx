@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { createItemAction, updateItemAction, type FormState } from "./actions";
 import type { ItemDetail } from "@/lib/db/items";
+import { LockedField } from "@/components/form/locked-field";
 import styles from "@/components/form/form.module.css";
 
 export type Option = { value: string; label: string };
@@ -60,7 +61,7 @@ export default function ItemForm({
         <div className={styles.section}>
           <div className={styles.field}>
             <span className={styles.label}>Company</span>
-            <input className={styles.input} value={companyLabel} disabled readOnly />
+            <LockedField value={companyLabel} />
           </div>
 
           <div className={styles.field}>

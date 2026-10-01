@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { createApprovalRuleAction, updateApprovalRuleAction, type FormState } from "./actions";
 import type { ApprovalRuleRow, ApprovableModule, ApproverRole } from "@/lib/db/approvals";
+import { LockedField } from "@/components/form/locked-field";
 import styles from "@/components/form/form.module.css";
 
 export default function ApprovalRuleForm({
@@ -53,23 +54,18 @@ export default function ApprovalRuleForm({
         <div className={styles.section}>
           <div className={styles.field}>
             <span className={styles.label}>Company</span>
-            <input className={styles.input} value={companyLabel} disabled readOnly />
+            <LockedField value={companyLabel} />
           </div>
 
           {rule ? (
             <>
               <div className={styles.field}>
                 <span className={styles.label}>Document</span>
-                <input className={styles.input} value={rule.MODULE_NAME} disabled readOnly />
+                <LockedField value={rule.MODULE_NAME} />
               </div>
               <div className={styles.field}>
                 <span className={styles.label}>Step</span>
-                <input
-                  className={`${styles.input} ${styles.mono}`}
-                  value={rule.STEP_NO}
-                  disabled
-                  readOnly
-                />
+                <LockedField value={rule.STEP_NO} mono />
               </div>
               <p className={styles.hint} style={{ gridColumn: "span 2" }}>
                 Fixed once created — a document already evaluated under this

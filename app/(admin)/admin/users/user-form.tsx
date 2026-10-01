@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { saveUserAction, type FormState } from "./actions";
 import type { UserDetail, AccessRow } from "@/lib/db/users";
+import { LockedField } from "@/components/form/locked-field";
 import styles from "@/components/form/form.module.css";
 
 export type CompanyOption = { id: number; code: string; name: string };
@@ -111,12 +112,7 @@ export default function UserForm({
               Username
             </label>
             {user ? (
-              <input
-                className={`${styles.input} ${styles.mono}`}
-                value={user.USERNAME}
-                disabled
-                readOnly
-              />
+              <LockedField value={user.USERNAME} mono />
             ) : (
               <>
                 <input

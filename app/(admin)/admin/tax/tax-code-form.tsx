@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { createTaxCodeAction, updateTaxCodeAction, type FormState } from "./actions";
 import type { TaxCodeRow } from "@/lib/db/tax";
+import { LockedField } from "@/components/form/locked-field";
 import styles from "@/components/form/form.module.css";
 
 export type Option = { value: string; label: string };
@@ -64,18 +65,13 @@ export default function TaxCodeForm({
         <div className={styles.section}>
           <div className={styles.field}>
             <span className={styles.label}>Company</span>
-            <input className={styles.input} value={companyLabel} disabled readOnly />
+            <LockedField value={companyLabel} />
           </div>
 
           {taxCode ? (
             <div className={styles.field}>
               <span className={styles.label}>Tax code</span>
-              <input
-                className={`${styles.input} ${styles.mono}`}
-                value={taxCode.TAX_CODE}
-                disabled
-                readOnly
-              />
+              <LockedField value={taxCode.TAX_CODE} mono />
             </div>
           ) : (
             <div className={styles.field}>

@@ -5,6 +5,7 @@ import { useActionState, useMemo, useState } from "react";
 import { createCoaAccountAction, updateCoaAccountAction, type FormState } from "./actions";
 import { CONVENTIONAL_SIDE, type AccountNature } from "@/lib/coa-types";
 import type { CoaRow } from "@/lib/db/coa";
+import { LockedField } from "@/components/form/locked-field";
 import styles from "@/components/form/form.module.css";
 
 export type ParentOption = {
@@ -80,16 +81,14 @@ export default function CoaForm({
         <div className={styles.section}>
           <div className={styles.field}>
             <span className={styles.label}>Company</span>
-            <input className={styles.input} value={companyLabel} disabled readOnly />
+            <LockedField value={companyLabel} />
           </div>
 
           <div className={styles.field}>
             <span className={styles.label}>Level</span>
-            <input
-              className={`${styles.input} ${styles.mono}`}
+            <LockedField
               value={`${impliedLevel} — ${["", "Group", "Control", "Sub-Control", "Posting"][impliedLevel]}`}
-              disabled
-              readOnly
+              mono
             />
             <span className={styles.hint}>
               {account
@@ -101,7 +100,7 @@ export default function CoaForm({
           {account ? (
             <div className={styles.field}>
               <span className={styles.label}>Parent</span>
-              <input className={`${styles.input} ${styles.mono}`} value="Fixed" disabled readOnly />
+              <LockedField value="Fixed" mono />
             </div>
           ) : (
             <div className={styles.field}>

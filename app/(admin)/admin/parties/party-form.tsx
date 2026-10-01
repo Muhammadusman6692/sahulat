@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { createPartyAction, updatePartyAction, type FormState } from "./actions";
 import type { PartyDetail } from "@/lib/db/parties";
+import { LockedField } from "@/components/form/locked-field";
 import styles from "@/components/form/form.module.css";
 
 export default function PartyForm({
@@ -51,7 +52,7 @@ export default function PartyForm({
         <div className={styles.section}>
           <div className={styles.field}>
             <span className={styles.label}>Company</span>
-            <input className={styles.input} value={companyLabel} disabled readOnly />
+            <LockedField value={companyLabel} />
           </div>
 
           <div className={styles.field}>

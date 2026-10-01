@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { saveWarehouse, type FormState } from "./actions";
 import type { WarehouseRow } from "@/lib/db/warehouses";
+import { LockedField } from "@/components/form/locked-field";
 import styles from "@/components/form/form.module.css";
 
 export type BranchOption = {
@@ -72,12 +73,7 @@ export default function WarehouseForm({
             </label>
             {warehouse ? (
               <>
-                <input
-                  className={`${styles.input} ${styles.mono}`}
-                  value={`${warehouse.BRANCH_CODE} — ${warehouse.BRANCH_NAME}`}
-                  disabled
-                  readOnly
-                />
+                <LockedField value={`${warehouse.BRANCH_CODE} — ${warehouse.BRANCH_NAME}`} mono />
                 <input type="hidden" name="companyId" value={warehouse.COMPANY_ID} />
                 <input type="hidden" name="branchId" value={warehouse.BRANCH_ID} />
                 <span className={styles.hint}>

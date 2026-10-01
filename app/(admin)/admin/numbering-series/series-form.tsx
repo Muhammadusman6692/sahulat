@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { createSeriesAction, updateSeriesAction, type FormState } from "./actions";
 import type { SeriesRow } from "@/lib/db/numbering";
+import { LockedField } from "@/components/form/locked-field";
 import styles from "@/components/form/form.module.css";
 
 export type Option = { value: string; label: string };
@@ -68,37 +69,22 @@ export default function SeriesForm({
         <div className={styles.section}>
           <div className={styles.field}>
             <span className={styles.label}>Company</span>
-            <input className={styles.input} value={companyLabel} disabled readOnly />
+            <LockedField value={companyLabel} />
           </div>
 
           {series ? (
             <>
               <div className={styles.field}>
                 <span className={styles.label}>Branch</span>
-                <input
-                  className={styles.input}
-                  value={series.BRANCH_CODE ?? "Company-wide"}
-                  disabled
-                  readOnly
-                />
+                <LockedField value={series.BRANCH_CODE ?? "Company-wide"} />
               </div>
               <div className={styles.field}>
                 <span className={styles.label}>Terminal</span>
-                <input
-                  className={`${styles.input} ${styles.mono}`}
-                  value={series.TERMINAL_ID ?? "— Not terminal-specific —"}
-                  disabled
-                  readOnly
-                />
+                <LockedField value={series.TERMINAL_ID ?? "— Not terminal-specific —"} mono />
               </div>
               <div className={styles.field}>
                 <span className={styles.label}>Document type</span>
-                <input
-                  className={`${styles.input} ${styles.mono}`}
-                  value={series.DOC_TYPE}
-                  disabled
-                  readOnly
-                />
+                <LockedField value={series.DOC_TYPE} mono />
               </div>
               <p className={styles.hint} style={{ gridColumn: "span 2" }}>
                 Fixed once created — a document already numbered under this
@@ -236,7 +222,7 @@ export default function SeriesForm({
 
           <div className={styles.field}>
             <span className={styles.label}>Preview</span>
-            <input className={`${styles.input} ${styles.mono}`} value={preview} disabled readOnly />
+            <LockedField value={preview} mono />
           </div>
 
           <div className={styles.field}>

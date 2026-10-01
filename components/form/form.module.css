@@ -76,6 +76,30 @@
   font-family: var(--font-plex-mono), ui-monospace, monospace;
 }
 
+/* A value the user cannot edit (an inherited scope, or fixed after
+   creation). Dashed border + lock icon so it reads as locked, not as a
+   plain input that happens to be greyed out. */
+.lockedField {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  font-size: 13px;
+  background: var(--surface-sunken);
+  color: var(--ink-2);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.lockedIcon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: var(--ink-3);
+}
+
 .hint {
   font-size: 11px;
   color: var(--ink-3);

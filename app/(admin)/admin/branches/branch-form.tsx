@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { saveBranch, type FormState } from "./actions";
 import type { BranchRow } from "@/lib/db/branches";
+import { LockedField } from "@/components/form/locked-field";
 import styles from "@/components/form/form.module.css";
 
 type CompanyOption = { id: number; code: string; name: string };
@@ -50,12 +51,7 @@ export default function BranchForm({
             </label>
             {branch ? (
               <>
-                <input
-                  className={`${styles.input} ${styles.mono}`}
-                  value={`${branch.COMPANY_CODE} — ${branch.COMPANY_NAME}`}
-                  disabled
-                  readOnly
-                />
+                <LockedField value={`${branch.COMPANY_CODE} — ${branch.COMPANY_NAME}`} mono />
                 <input type="hidden" name="companyId" value={branch.COMPANY_ID} />
                 <span className={styles.hint}>
                   A branch cannot be moved between companies — its warehouses,
