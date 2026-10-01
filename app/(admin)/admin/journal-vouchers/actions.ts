@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requirePermission, requireScope } from "@/lib/dal";
 import { getActiveCompanyId } from "@/lib/active-scope";
 import { listPostableAccounts } from "@/lib/db/coa";
+import { getPartyIdsByLedgerCoaIds } from "@/lib/db/parties";
 import {
   createJournalVoucherDraft,
   updateJournalVoucherDraft,
@@ -21,7 +22,6 @@ import { fmtMoney } from "@/lib/format";
 const lineSchema = z
   .object({
     coaId: z.coerce.number().int().positive("Select an account for every line."),
-    partyId: z.coerce.number().int().positive().nullable(),
     narration: z.string().trim().max(400).nullable(),
     debit: z.coerce.number().min(0),
     credit: z.coerce.number().min(0),
@@ -29,6 +29,8 @@ const lineSchema = z
   .refine((l) => (l.debit > 0) !== (l.credit > 0), {
     message: "Each line needs an amount on exactly one side (debit or credit).",
   });
+
+type LineDraft = Omit<JvLineInput, "partyId">;
 
 const linesArraySchema = z
   .array(lineSchema)
@@ -45,31 +47,50 @@ export type FormState = {
   fieldErrors?: Record<string, string>;
 };
 
-/** Re-validates against the live COA, never the client's copy: a line on a
- *  Customer/Supplier control account must carry a party, any other line must
- *  not. Returns null on success, an error string otherwise. */
-async function checkPartyRules(
+/**
+ * Re-validates against the live COA, never the client's copy, and derives
+ * each line's party straight from the account it's coded to: every
+ * customer/supplier gets its own dedicated ledger account
+ * (createPartyLedgerAccount), so the account picked on the line already
+ * identifies the party — there's no separate party field to trust or
+ * mismatch. Returns the lines with partyId filled in, or an error string.
+ */
+async function resolveLineParties(
   companyId: number,
-  lines: JvLineInput[],
-): Promise<string | null> {
+  lines: LineDraft[],
+): Promise<{ lines?: JvLineInput[]; error?: string }> {
   const accounts = await listPostableAccounts(companyId);
   const controlType = new Map(accounts.map((a) => [a.COA_ID, a.IS_CONTROL_AC]));
 
+  const partyCoaIds = lines
+    .map((l) => l.coaId)
+    .filter((coaId) => {
+      const type = controlType.get(coaId);
+      return type === "CUSTOMER" || type === "SUPPLIER";
+    });
+  const partyByCoaId = await getPartyIdsByLedgerCoaIds(companyId, partyCoaIds);
+
+  const resolved: JvLineInput[] = [];
   for (const l of lines) {
-    if (!controlType.has(l.coaId)) return "One of the selected accounts is no longer valid.";
+    if (!controlType.has(l.coaId)) return { error: "One of the selected accounts is no longer valid." };
     const type = controlType.get(l.coaId);
     const needsParty = type === "CUSTOMER" || type === "SUPPLIER";
-    if (needsParty && !l.partyId) {
-      return `A party is required on every ${type.toLowerCase()} control-account line.`;
+    if (!needsParty) {
+      resolved.push({ ...l, partyId: null });
+      continue;
     }
-    if (!needsParty && l.partyId) {
-      return "A party can only be set on a Customer or Supplier control-account line.";
+    const partyId = partyByCoaId.get(l.coaId) ?? null;
+    if (!partyId) {
+      return {
+        error: `No party is linked to the selected ${type.toLowerCase()} account — contact an administrator.`,
+      };
     }
+    resolved.push({ ...l, partyId });
   }
-  return null;
+  return { lines: resolved };
 }
 
-function parseLines(formData: FormData): { lines?: JvLineInput[]; error?: string } {
+function parseLines(formData: FormData): { lines?: LineDraft[]; error?: string } {
   let raw: unknown;
   try {
     raw = JSON.parse(String(formData.get("linesJson") ?? "[]"));
@@ -117,11 +138,11 @@ export async function createDraftAction(
   const { branchId, voucherDate, narration } = parsedHeader.data;
   await requireScope(companyId, branchId);
 
-  const { lines, error: linesError } = parseLines(formData);
-  if (linesError || !lines) return { error: linesError };
+  const { lines: draftLines, error: linesError } = parseLines(formData);
+  if (linesError || !draftLines) return { error: linesError };
 
-  const partyError = await checkPartyRules(companyId, lines);
-  if (partyError) return { error: partyError };
+  const { lines, error: partyError } = await resolveLineParties(companyId, draftLines);
+  if (partyError || !lines) return { error: partyError };
 
   let voucherId: number;
   let voucherNo: string;
@@ -168,11 +189,11 @@ export async function updateDraftAction(
   const narration = String(formData.get("narration") ?? "").trim();
   if (!narration) return { error: "Narration is required." };
 
-  const { lines, error: linesError } = parseLines(formData);
-  if (linesError || !lines) return { error: linesError };
+  const { lines: draftLines, error: linesError } = parseLines(formData);
+  if (linesError || !draftLines) return { error: linesError };
 
-  const partyError = await checkPartyRules(existing.header.COMPANY_ID, lines);
-  if (partyError) return { error: partyError };
+  const { lines, error: partyError } = await resolveLineParties(existing.header.COMPANY_ID, draftLines);
+  if (partyError || !lines) return { error: partyError };
 
   try {
     await updateJournalVoucherDraft(voucherId, narration, lines);

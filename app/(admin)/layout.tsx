@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { verifySession } from "@/lib/dal";
-import { getActiveCompanyId } from "@/lib/active-scope";
-import { getScopeLabels, listAccessibleCompanies } from "@/lib/db/scope";
+import { getActiveCompanyId, getActiveBranchId } from "@/lib/active-scope";
+import { getScopeLabels, listAccessibleCompanies, listAccessibleBranches } from "@/lib/db/scope";
 import { getMenu } from "@/lib/db/menu";
 import SidebarNav from "@/components/app-shell/sidebar-nav";
 import SignOutButton from "@/components/app-shell/sign-out-button";
 import CompanySwitcher from "@/components/app-shell/company-switcher";
+import BranchSwitcher from "@/components/app-shell/branch-switcher";
 import { ModuleIcon } from "@/components/app-shell/module-icons";
 import styles from "@/components/app-shell/shell.module.css";
 
@@ -15,10 +16,15 @@ export default async function AdminLayout({ children }: LayoutProps<"/">) {
   // running, so each page calls requirePermission for itself.
   const user = await verifySession();
   const activeCompanyId = await getActiveCompanyId(user.access);
-  const [scope, menu, companies] = await Promise.all([
-    getScopeLabels(user.access, activeCompanyId),
+  const activeBranchId =
+    activeCompanyId !== undefined ? await getActiveBranchId(user.access, activeCompanyId) : null;
+  const [scope, menu, companies, branches] = await Promise.all([
+    getScopeLabels(user.access, activeCompanyId, activeBranchId),
     getMenu(user.permissions),
     listAccessibleCompanies(user.access),
+    activeCompanyId !== undefined
+      ? listAccessibleBranches(user.access, activeCompanyId)
+      : Promise.resolve([]),
   ]);
 
   const initials = user.fullName
@@ -79,7 +85,11 @@ export default async function AdminLayout({ children }: LayoutProps<"/">) {
               <span className={styles.scopeDivider} />
               <span className={styles.scopeSeg}>
                 <ModuleIcon icon="mapPin" className={styles.scopeSegIcon} />
-                {scope.branch}
+                {branches.length > 1 && activeBranchId !== null ? (
+                  <BranchSwitcher branches={branches} activeBranchId={activeBranchId} />
+                ) : (
+                  scope.branch
+                )}
               </span>
               <span className={styles.scopeDivider} />
               <span className={styles.scopeSeg}>

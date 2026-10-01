@@ -3,7 +3,6 @@ import { getActiveCompanyId } from "@/lib/active-scope";
 import { getCompany } from "@/lib/db/companies";
 import { listBranches } from "@/lib/db/branches";
 import { listPostableAccounts } from "@/lib/db/coa";
-import { listParties } from "@/lib/db/parties";
 import JvForm from "../jv-form";
 import BackLink from "@/components/back-link/back-link";
 import styles from "@/components/data-grid/grid.module.css";
@@ -18,12 +17,10 @@ export default async function NewJournalVoucherPage() {
     return <p className={styles.empty}>Your account is not scoped to any company.</p>;
   }
 
-  const [company, branches, accounts, customers, suppliers] = await Promise.all([
+  const [company, branches, accounts] = await Promise.all([
     getCompany(companyId),
     listBranches([companyId], false),
     listPostableAccounts(companyId),
-    listParties({ companyId, type: "CUSTOMER", page: 1, pageSize: 1000 }),
-    listParties({ companyId, type: "SUPPLIER", page: 1, pageSize: 1000 }),
   ]);
 
   return (
@@ -49,9 +46,8 @@ export default async function NewJournalVoucherPage() {
           code: a.ACCOUNT_CODE,
           name: a.ACCOUNT_NAME,
           controlType: a.IS_CONTROL_AC,
+          parentName: a.PARENT_NAME,
         }))}
-        customers={customers.rows.map((p) => ({ id: p.PARTY_ID, name: p.PARTY_NAME }))}
-        suppliers={suppliers.rows.map((p) => ({ id: p.PARTY_ID, name: p.PARTY_NAME }))}
         initial={{
           branchId: branches[0]?.BRANCH_ID ?? 0,
           branchLabel: "",

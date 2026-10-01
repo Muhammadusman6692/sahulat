@@ -34,18 +34,26 @@ export async function listCoaFlat(companyId: number, includeInactive: boolean) {
   );
 }
 
+export type PostableAccountRow = CoaRow & { PARENT_NAME: string | null };
+
 /** Level-4 (postable) accounts a GL line can be coded to, e.g. for Journal
- *  Voucher entry. IS_CONTROL_AC drives whether a line needs a party. */
+ *  Voucher entry. IS_CONTROL_AC drives whether a line needs a party.
+ *  PARENT_NAME is the immediate parent's name — for a party ledger account
+ *  that parent IS the company's AR/AP control head (see
+ *  createPartyLedgerAccount below), so it doubles as the "control head"
+ *  label an account LOV shows next to a customer/supplier account. */
 export async function listPostableAccounts(companyId: number) {
-  return query<CoaRow>(
-    `SELECT coa_id, company_id, account_code, account_name, parent_id,
-            account_level, account_nature, normal_side, is_postable,
-            is_control_ac, cost_center_required, active_yn
-       FROM coa
-      WHERE company_id = :companyId
-        AND is_postable = 'Y'
-        AND active_yn = 'Y'
-      ORDER BY account_code`,
+  return query<PostableAccountRow>(
+    `SELECT c.coa_id, c.company_id, c.account_code, c.account_name, c.parent_id,
+            c.account_level, c.account_nature, c.normal_side, c.is_postable,
+            c.is_control_ac, c.cost_center_required, c.active_yn,
+            p.account_name AS parent_name
+       FROM coa c
+       LEFT JOIN coa p ON p.coa_id = c.parent_id
+      WHERE c.company_id = :companyId
+        AND c.is_postable = 'Y'
+        AND c.active_yn = 'Y'
+      ORDER BY c.account_code`,
     { companyId },
   );
 }

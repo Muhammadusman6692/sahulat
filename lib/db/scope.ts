@@ -14,6 +14,12 @@ export type CompanyOption = {
   name: string;
 };
 
+export type BranchOption = {
+  id: number;
+  code: string;
+  name: string;
+};
+
 /**
  * Every company the user has at least one access row for, for the scope
  * switcher. Ordered by name so the dropdown reads alphabetically rather than
@@ -37,17 +43,53 @@ export async function listAccessibleCompanies(
 }
 
 /**
+ * Every specific branch the user has an access row for under `companyId`,
+ * for the branch switcher. Empty when the user's access to this company is
+ * unrestricted (a NULL branch_id row) or limited to a single branch — either
+ * way there is nothing to switch between, so the scope pill just shows text.
+ */
+export async function listAccessibleBranches(
+  access: ScopeRow[],
+  companyId: number,
+): Promise<BranchOption[]> {
+  const ids = [
+    ...new Set(
+      access
+        .filter((a) => a.companyId === companyId && a.branchId !== null)
+        .map((a) => a.branchId as number),
+    ),
+  ];
+  if (ids.length === 0) return [];
+
+  const rows = await query<{ BRANCH_ID: number; BRANCH_CODE: string; BRANCH_NAME: string }>(
+    `SELECT branch_id, branch_code, branch_name
+       FROM branch
+      WHERE branch_id IN (${ids.map((_, i) => `:id${i}`).join(",")})
+      ORDER BY branch_name`,
+    Object.fromEntries(ids.map((id, i) => [`id${i}`, id])),
+  );
+
+  return rows.map((r) => ({ id: r.BRANCH_ID, code: r.BRANCH_CODE, name: r.BRANCH_NAME }));
+}
+
+/**
  * Human labels for the scope the user is currently working in. A NULL branch or
  * warehouse on the access row means unrestricted, which is shown as "All",
  * matching how pkg_security.check_scope reads the same NULLs. `activeCompanyId`
- * picks which of the user's access rows to describe — see lib/active-scope.ts.
+ * and `activeBranchId` pick which of the user's access rows to describe — see
+ * lib/active-scope.ts.
  */
 export async function getScopeLabels(
   access: ScopeRow[] | undefined,
   activeCompanyId: number | undefined,
+  activeBranchId: number | null | undefined,
 ): Promise<ScopeLabels | null> {
   const row =
-    access?.find((a) => a.companyId === activeCompanyId) ?? access?.[0];
+    access?.find(
+      (a) => a.companyId === activeCompanyId && a.branchId === (activeBranchId ?? null),
+    ) ??
+    access?.find((a) => a.companyId === activeCompanyId) ??
+    access?.[0];
   if (!row) return null;
 
   const [company] = await query<{ COMPANY_NAME: string }>(

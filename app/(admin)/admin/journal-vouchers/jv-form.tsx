@@ -1,32 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useState } from "react";
 import { createDraftAction, updateDraftAction, type FormState } from "./actions";
 import { LockedField } from "@/components/form/locked-field";
 import { fmtMoney } from "@/lib/format";
+import AccountCombobox from "@/components/form/account-combobox";
+import type { AccountLovOption } from "@/components/form/account-lov";
 import formStyles from "@/components/form/form.module.css";
 import gridStyles from "@/components/data-grid/grid.module.css";
 
-export type AccountOption = {
-  id: number;
-  code: string;
-  name: string;
-  controlType: "CUSTOMER" | "SUPPLIER" | "CASH" | "BANK" | null;
-};
-export type PartyOption = { id: number; name: string };
+export type AccountOption = AccountLovOption;
 export type BranchOption = { id: number; code: string; name: string };
 
 export type JvLineDraft = {
   coaId: string;
-  partyId: string;
   narration: string;
   debit: string;
   credit: string;
 };
 
 function emptyLine(): JvLineDraft {
-  return { coaId: "", partyId: "", narration: "", debit: "", credit: "" };
+  return { coaId: "", narration: "", debit: "", credit: "" };
 }
 
 export default function JvForm({
@@ -35,8 +30,6 @@ export default function JvForm({
   companyLabel,
   branches,
   accounts,
-  customers,
-  suppliers,
   initial,
 }: {
   mode: "create" | "edit";
@@ -44,8 +37,6 @@ export default function JvForm({
   companyLabel: string;
   branches: BranchOption[];
   accounts: AccountOption[];
-  customers: PartyOption[];
-  suppliers: PartyOption[];
   initial: {
     branchId: number;
     branchLabel: string;
@@ -68,8 +59,6 @@ export default function JvForm({
     initial.lines.length >= 2 ? initial.lines : [emptyLine(), emptyLine()],
   );
 
-  const accountById = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts]);
-
   function updateRow(i: number, patch: Partial<JvLineDraft>) {
     setRows((prev) =>
       prev.map((r, idx) => {
@@ -77,16 +66,6 @@ export default function JvForm({
         const next = { ...r, ...patch };
         if (patch.debit !== undefined && Number(patch.debit) > 0) next.credit = "";
         if (patch.credit !== undefined && Number(patch.credit) > 0) next.debit = "";
-        if (patch.coaId !== undefined) {
-          const type = accountById.get(Number(patch.coaId))?.controlType ?? null;
-          const validIds =
-            type === "CUSTOMER"
-              ? customers.map((c) => c.id)
-              : type === "SUPPLIER"
-                ? suppliers.map((s) => s.id)
-                : [];
-          if (!validIds.includes(Number(next.partyId))) next.partyId = "";
-        }
         return next;
       }),
     );
@@ -109,7 +88,6 @@ export default function JvForm({
   const linesJson = JSON.stringify(
     rows.map((r) => ({
       coaId: r.coaId,
-      partyId: r.partyId || null,
       narration: r.narration || null,
       debit: r.debit || 0,
       credit: r.credit || 0,
@@ -224,8 +202,7 @@ export default function JvForm({
           <thead>
             <tr>
               <th style={{ width: 32 }}>#</th>
-              <th style={{ width: 260 }}>Account *</th>
-              <th style={{ width: 200 }}>Party</th>
+              <th style={{ width: 280 }}>Account *</th>
               <th>Line narration</th>
               <th style={{ width: 130, textAlign: "right" }}>Debit</th>
               <th style={{ width: 130, textAlign: "right" }}>Credit</th>
@@ -234,46 +211,15 @@ export default function JvForm({
           </thead>
           <tbody>
             {rows.map((r, i) => {
-              const type = accountById.get(Number(r.coaId))?.controlType ?? null;
-              const needsParty = type === "CUSTOMER" || type === "SUPPLIER";
-              const partyOptions = type === "CUSTOMER" ? customers : type === "SUPPLIER" ? suppliers : [];
-              const partyDisabled = !needsParty;
-
               return (
                 <tr key={i}>
                   <td className={gridStyles.muted}>{i + 1}</td>
                   <td>
-                    <select
-                      className={formStyles.select}
+                    <AccountCombobox
+                      accounts={accounts}
                       value={r.coaId}
-                      onChange={(e) => updateRow(i, { coaId: e.target.value })}
-                      required
-                    >
-                      <option value="">— select account —</option>
-                      {accounts.map((a) => (
-                        <option key={a.id} value={a.id}>
-                          {a.code} - {a.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td>
-                    <select
-                      className={formStyles.select}
-                      value={r.partyId}
-                      onChange={(e) => updateRow(i, { partyId: e.target.value })}
-                      disabled={partyDisabled}
-                      style={partyDisabled ? { color: "var(--ink-disabled)" } : undefined}
-                    >
-                      <option value="">
-                        {needsParty ? `— select ${type!.toLowerCase()} —` : "N/A for this account"}
-                      </option>
-                      {partyOptions.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(value) => updateRow(i, { coaId: value })}
+                    />
                   </td>
                   <td>
                     <input
@@ -332,7 +278,8 @@ export default function JvForm({
             Add line
           </button>
           <span className={gridStyles.note}>
-            Party turns on and becomes required only for a Customer or Supplier control-account line.
+            A Customer or Supplier account carries its own dedicated ledger account — the party is picked up
+            automatically from the account, no separate party field needed.
           </span>
         </div>
 

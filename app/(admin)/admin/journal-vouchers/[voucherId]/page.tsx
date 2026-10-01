@@ -4,7 +4,6 @@ import { getJournalVoucher } from "@/lib/db/journal-vouchers";
 import { getCompany } from "@/lib/db/companies";
 import { listBranches } from "@/lib/db/branches";
 import { listPostableAccounts } from "@/lib/db/coa";
-import { listParties } from "@/lib/db/parties";
 import { can } from "@/lib/permissions";
 import { fmtMoney } from "@/lib/format";
 import JvForm from "../jv-form";
@@ -36,12 +35,10 @@ export default async function JournalVoucherDetailPage({
   const mayCancel = can(user.permissions, "JV_ENTRY", "CANCEL");
 
   if (detail.header.STATUS === "DRAFT" && mayEdit) {
-    const [company, branches, accounts, customers, suppliers] = await Promise.all([
+    const [company, branches, accounts] = await Promise.all([
       getCompany(detail.header.COMPANY_ID),
       listBranches([detail.header.COMPANY_ID], false),
       listPostableAccounts(detail.header.COMPANY_ID),
-      listParties({ companyId: detail.header.COMPANY_ID, type: "CUSTOMER", page: 1, pageSize: 1000 }),
-      listParties({ companyId: detail.header.COMPANY_ID, type: "SUPPLIER", page: 1, pageSize: 1000 }),
     ]);
 
     return (
@@ -73,9 +70,8 @@ export default async function JournalVoucherDetailPage({
             code: a.ACCOUNT_CODE,
             name: a.ACCOUNT_NAME,
             controlType: a.IS_CONTROL_AC,
+            parentName: a.PARENT_NAME,
           }))}
-          customers={customers.rows.map((p) => ({ id: p.PARTY_ID, name: p.PARTY_NAME }))}
-          suppliers={suppliers.rows.map((p) => ({ id: p.PARTY_ID, name: p.PARTY_NAME }))}
           initial={{
             branchId: detail.header.BRANCH_ID,
             branchLabel: detail.header.BRANCH_NAME,
@@ -84,7 +80,6 @@ export default async function JournalVoucherDetailPage({
             narration: detail.header.NARRATION ?? "",
             lines: detail.lines.map((l) => ({
               coaId: String(l.COA_ID),
-              partyId: l.PARTY_ID ? String(l.PARTY_ID) : "",
               narration: l.NARRATION ?? "",
               debit: l.DEBIT_AMT ? String(l.DEBIT_AMT) : "",
               credit: l.CREDIT_AMT ? String(l.CREDIT_AMT) : "",

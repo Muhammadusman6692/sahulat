@@ -34,6 +34,34 @@ export type PartyListFilters = {
 
 export type PartyListResult = { rows: PartyRow[]; total: number };
 
+/**
+ * Reverse lookup from a party's own ledger account (ar_coa_id / ap_coa_id)
+ * back to the party — since every customer/supplier gets a dedicated COA
+ * account (createPartyLedgerAccount), picking that account already picks the
+ * party. Used to derive a JV line's party server-side instead of trusting a
+ * second form field for the same fact.
+ */
+export async function getPartyIdsByLedgerCoaIds(
+  companyId: number,
+  coaIds: number[],
+): Promise<Map<number, number>> {
+  const ids = [...new Set(coaIds)];
+  if (ids.length === 0) return new Map();
+
+  const placeholders = ids.map((_, i) => `:id${i}`).join(",");
+  const binds = Object.fromEntries(ids.map((id, i) => [`id${i}`, id]));
+
+  const rows = await query<{ PARTY_ID: number; COA_ID: number }>(
+    `SELECT party_id, ar_coa_id AS coa_id FROM party
+      WHERE company_id = :companyId AND ar_coa_id IN (${placeholders})
+     UNION ALL
+     SELECT party_id, ap_coa_id AS coa_id FROM party
+      WHERE company_id = :companyId AND ap_coa_id IN (${placeholders})`,
+    { companyId, ...binds },
+  );
+  return new Map(rows.map((r) => [r.COA_ID, r.PARTY_ID]));
+}
+
 const SELECT_LIST = `
   SELECT p.party_id, p.party_code, p.party_name, p.is_customer, p.is_supplier,
          p.ntn_no, p.strn_no, p.phone, p.credit_limit, p.credit_days, p.active_yn,
