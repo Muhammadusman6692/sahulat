@@ -36,6 +36,7 @@ export default async function CashVoucherDetailPage({
   const mayEdit = can(user.permissions, "CASH_VOUCHER", "EDIT");
   const mayPost = can(user.permissions, "CASH_VOUCHER", "POST");
   const mayCancel = can(user.permissions, "CASH_VOUCHER", "CANCEL");
+  const mayPrint = can(user.permissions, "CASH_VOUCHER", "PRINT");
 
   if (detail.header.STATUS === "DRAFT" && mayEdit) {
     const [company, branches, accounts] = await Promise.all([
@@ -70,6 +71,7 @@ export default async function CashVoucherDetailPage({
             mayEdit={mayEdit}
             mayPost={mayPost}
             mayCancel={mayCancel}
+            mayPrint={mayPrint}
           />
         </div>
 
@@ -132,6 +134,7 @@ export default async function CashVoucherDetailPage({
           mayEdit={mayEdit}
           mayPost={mayPost}
           mayCancel={mayCancel}
+          mayPrint={mayPrint}
         />
       </div>
 
