@@ -20,6 +20,7 @@
 }
 
 .sheet {
+  position: relative;
   width: 100%;
   max-width: 800px;
   background: #ffffff;
@@ -27,7 +28,30 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.sheetContent {
+  position: relative;
+  z-index: 1;
   padding: 36px 40px;
+}
+
+.watermark {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 100px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: rgba(26, 25, 23, 0.1);
+  transform: rotate(-28deg);
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .letterhead {
@@ -116,6 +140,15 @@
   font-weight: 700;
 }
 
+.amountWords {
+  margin-top: 14px;
+  font-size: 12px;
+}
+
+.amountWords .metaLabel {
+  margin-right: 6px;
+}
+
 .signatures {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -153,8 +186,11 @@
     border: none;
     box-shadow: none;
     border-radius: 0;
-    padding: 0;
     max-width: none;
+  }
+
+  .sheetContent {
+    padding: 0;
   }
 
   @page {

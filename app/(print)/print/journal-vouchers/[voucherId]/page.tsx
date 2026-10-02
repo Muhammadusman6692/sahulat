@@ -60,6 +60,7 @@ export default async function PrintJournalVoucherPage({
           address: company.ADDRESS,
           ntnNo: company.NTN_NO,
           strnNo: company.STRN_NO,
+          baseCurrency: company.BASE_CURRENCY,
         }
       }
     />
