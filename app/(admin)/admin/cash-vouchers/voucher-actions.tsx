@@ -80,16 +80,25 @@ export default function VoucherActions({
             rel="noopener noreferrer"
             className={formStyles.btn}
           >
+            <svg className={formStyles.btnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-2M6 14h12v7H6z" />
+            </svg>
             Print
           </Link>
         )}
         {status === "DRAFT" && mayEdit && (
-          <button type="button" className={formStyles.btn} onClick={del} disabled={pending}>
+          <button type="button" className={formStyles.btnDanger} onClick={del} disabled={pending}>
+            <svg className={formStyles.btnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
+            </svg>
             {pending && busy === "delete" ? "Deleting…" : "Delete draft"}
           </button>
         )}
         {status === "DRAFT" && mayPost && (
           <button type="button" className={formStyles.btnPrimary} onClick={post} disabled={pending}>
+            <svg className={formStyles.btnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
             {pending && busy === "post" ? "Posting…" : "Post"}
           </button>
         )}

@@ -8,6 +8,17 @@
 --
 -- Uses the trg_coa_level_chk trigger's own rule (child level = parent level
 -- + 1) via normal INSERTs — nothing here bypasses it. Safe to re-run.
+--
+-- CUSTOMER/SUPPLIER accounts seeded here (marked below) are placeholder
+-- leaf accounts only — normally Party Master creates this kind of account
+-- itself, alongside the `party` row whose ar_coa_id/ap_coa_id points back at
+-- it (see sql/16_party_master.sql). Because these were inserted directly,
+-- they start with no backing party row, so JV/CV reject them with "No party
+-- is linked to the selected account" until one is added, e.g.:
+--   INSERT INTO party (company_id, party_code, party_name, is_customer,
+--                       is_supplier, ar_coa_id, ap_coa_id, active_yn)
+--   VALUES (:companyId, '<code>', '<name>', 'Y'/'N', 'Y'/'N', <coa_id or NULL>,
+--           <coa_id or NULL>, 'Y');
 -- ============================================================================
 
 SET DEFINE OFF
@@ -59,7 +70,7 @@ BEGIN
   v_dummy := acct('1-01',        'Current Assets',         '1',   2, 'ASSET',     'D');
   v_dummy := acct('1-01-001',    'Trade Debtors',          '1-01',3, 'ASSET',     'D');
   v_dummy := acct('1-01-001-0001','Al-Madina Traders',     '1-01-001', 4, 'ASSET', 'D', 'CUSTOMER');
-  v_dummy := acct('1-01-001-0002','Shaheen Distributors',  '1-01-001', 4, 'ASSET', 'D', 'CUSTOMER');
+  v_dummy := acct('1-01-001-0002','Shaheen Distributors',  '1-01-001', 4, 'ASSET', 'D', 'CUSTOMER'); -- needs a backing party row, see note above
   v_dummy := acct('1-01-002',    'Stock in Trade',         '1-01',3, 'ASSET',     'D');
   v_dummy := acct('1-01-002-0001','Inventory - Main Store','1-01-002', 4, 'ASSET', 'D');
   v_dummy := acct('1-01-003',    'Cash & Bank',            '1-01',3, 'ASSET',     'D');
@@ -73,7 +84,7 @@ BEGIN
   v_dummy := acct('2',           'LIABILITIES',            NULL,  1, 'LIABILITY', 'C');
   v_dummy := acct('2-01',        'Current Liabilities',    '2',   2, 'LIABILITY', 'C');
   v_dummy := acct('2-01-001',    'Trade Creditors',        '2-01',3, 'LIABILITY', 'C');
-  v_dummy := acct('2-01-001-0001','Sunshine Distributors (Supplier)', '2-01-001', 4, 'LIABILITY', 'C', 'SUPPLIER');
+  v_dummy := acct('2-01-001-0001','Sunshine Distributors (Supplier)', '2-01-001', 4, 'LIABILITY', 'C', 'SUPPLIER'); -- needs a backing party row, see note above
   v_dummy := acct('2-01-002',    'Tax Payable',            '2-01',3, 'LIABILITY', 'C');
   v_dummy := acct('2-01-002-0001','Output Sales Tax - FBR','2-01-002', 4, 'LIABILITY', 'C');
 

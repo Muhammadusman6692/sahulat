@@ -346,8 +346,8 @@ export default function JvForm({
         </div>
       </div>
 
-      <div className={formStyles.actions}>
-        <Link href="/admin/journal-vouchers" className={formStyles.btn}>
+      <div className={formStyles.actionsBar}>
+        <Link href="/admin/journal-vouchers" className={formStyles.btnTertiary}>
           Cancel
         </Link>
         <div className={formStyles.grow} />
@@ -358,6 +358,10 @@ export default function JvForm({
           className={formStyles.btn}
           disabled={pending || !balanced}
         >
+          <svg className={formStyles.btnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z" />
+            <path d="M17 21v-8H7v8M7 3v5h8" />
+          </svg>
           {pending ? "Saving…" : "Save as draft"}
         </button>
         <button
@@ -367,6 +371,9 @@ export default function JvForm({
           className={formStyles.btnPrimary}
           disabled={pending || !balanced}
         >
+          <svg className={formStyles.btnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
           {pending ? "Saving…" : "Save & Post"}
         </button>
       </div>

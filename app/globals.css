@@ -26,6 +26,8 @@
   --accent-ink: #7a3a11;
 
   --danger: #9b2226;
+  --danger-tint: #f8e9e9;
+  --danger-border: #e3bcbd;
 
   /* Dark chrome (sidebar, POS/terminal bars) */
   --chrome: #1c2723;
