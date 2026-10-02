@@ -69,6 +69,7 @@ const ROUTES: Record<string, string> = {
   BANK_VOUCHER: "/admin/bank-vouchers",
   GL_REPORT: "/admin/gl-report",
   PARTY_LEDGER: "/admin/party-ledger",
+  TRIAL_BALANCE: "/admin/trial-balance",
   PERIOD_CLOSE: "/admin/period-close",
 };
 
