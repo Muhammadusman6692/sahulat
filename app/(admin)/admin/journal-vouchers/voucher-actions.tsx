@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { postDraftAction, deleteDraftAction, cancelPostedAction } from "./actions";
 import Modal from "@/components/ui/modal";
 import formStyles from "@/components/form/form.module.css";
@@ -12,12 +13,14 @@ export default function VoucherActions({
   mayEdit,
   mayPost,
   mayCancel,
+  mayPrint,
 }: {
   voucherId: number;
   status: "DRAFT" | "POSTED" | "CANCELLED";
   mayEdit: boolean;
   mayPost: boolean;
   mayCancel: boolean;
+  mayPrint: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -70,6 +73,16 @@ export default function VoucherActions({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
       <div style={{ display: "flex", gap: 8 }}>
+        {mayPrint && (
+          <Link
+            href={`/print/journal-vouchers/${voucherId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={formStyles.btn}
+          >
+            Print
+          </Link>
+        )}
         {status === "DRAFT" && mayEdit && (
           <button type="button" className={formStyles.btn} onClick={del} disabled={pending}>
             {pending && busy === "delete" ? "Deleting…" : "Delete draft"}

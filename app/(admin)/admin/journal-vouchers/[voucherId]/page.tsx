@@ -33,6 +33,7 @@ export default async function JournalVoucherDetailPage({
   const mayEdit = can(user.permissions, "JV_ENTRY", "EDIT");
   const mayPost = can(user.permissions, "JV_ENTRY", "POST");
   const mayCancel = can(user.permissions, "JV_ENTRY", "CANCEL");
+  const mayPrint = can(user.permissions, "JV_ENTRY", "PRINT");
 
   if (detail.header.STATUS === "DRAFT" && mayEdit) {
     const [company, branches, accounts] = await Promise.all([
@@ -57,6 +58,7 @@ export default async function JournalVoucherDetailPage({
             mayEdit={mayEdit}
             mayPost={mayPost}
             mayCancel={mayCancel}
+            mayPrint={mayPrint}
           />
         </div>
 
@@ -122,6 +124,7 @@ export default async function JournalVoucherDetailPage({
           mayEdit={mayEdit}
           mayPost={mayPost}
           mayCancel={mayCancel}
+          mayPrint={mayPrint}
         />
       </div>
 

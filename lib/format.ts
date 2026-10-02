@@ -27,3 +27,8 @@ export function fmtRate(n: number | null | undefined): string {
 export function fmtQty(n: number | null | undefined): string {
   return n === null || n === undefined ? "—" : qty.format(n);
 }
+
+/** Dates: "02 Oct 2026", the UI convention for voucher/document dates. */
+export function fmtDate(d: Date | null | undefined): string {
+  return d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+}
