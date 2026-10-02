@@ -5,13 +5,12 @@ import styles from "./voucher-print.module.css";
 export type VoucherPrintLine = {
   key: number | string;
   accountLabel: string;
-  partyName: string | null;
   narration: string | null;
   debit: number;
   credit: number;
 };
 
-export type VoucherPrintInfo = { label: string; value: string };
+export type VoucherPrintInfo = { label: string; value: string; sub?: string };
 
 export type VoucherPrintCompany = {
   code: string;
@@ -66,6 +65,7 @@ export default function VoucherPrintView({
             <div key={row.label}>
               <div className={styles.metaLabel}>{row.label}</div>
               <div className={styles.metaValue}>{row.value}</div>
+              {row.sub && <div className={styles.metaValue}>{row.sub}</div>}
             </div>
           ))}
         </div>
@@ -76,7 +76,6 @@ export default function VoucherPrintView({
           <thead>
             <tr>
               <th>Account</th>
-              <th>Party</th>
               <th>Line narration</th>
               <th style={{ textAlign: "right" }}>Debit</th>
               <th style={{ textAlign: "right" }}>Credit</th>
@@ -86,7 +85,6 @@ export default function VoucherPrintView({
             {lines.map((l) => (
               <tr key={l.key}>
                 <td>{l.accountLabel}</td>
-                <td>{l.partyName ?? "—"}</td>
                 <td>{l.narration ?? "—"}</td>
                 <td className={styles.num}>{l.debit ? fmtMoney(l.debit) : ""}</td>
                 <td className={styles.num}>{l.credit ? fmtMoney(l.credit) : ""}</td>
@@ -95,7 +93,7 @@ export default function VoucherPrintView({
           </tbody>
           <tfoot>
             <tr className={styles.totalRow}>
-              <td colSpan={3} style={{ textAlign: "right" }}>Total</td>
+              <td colSpan={2} style={{ textAlign: "right" }}>Total</td>
               <td className={styles.num}>{fmtMoney(totalDebit)}</td>
               <td className={styles.num}>{fmtMoney(totalCredit)}</td>
             </tr>

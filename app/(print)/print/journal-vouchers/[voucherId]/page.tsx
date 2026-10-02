@@ -34,20 +34,19 @@ export default async function PrintJournalVoucherPage({
         { label: "Voucher date", value: fmtDate(detail.header.VOUCHER_DATE) },
         {
           label: "Created by",
-          value: `${detail.header.CREATED_BY_NAME} · ${fmtDate(detail.header.CREATED_ON)}`,
+          value: detail.header.CREATED_BY_NAME,
+          sub: fmtDate(detail.header.CREATED_ON),
         },
         {
           label: "Posted by",
-          value: detail.header.POSTED_BY_NAME
-            ? `${detail.header.POSTED_BY_NAME} · ${fmtDate(detail.header.POSTED_ON)}`
-            : "—",
+          value: detail.header.POSTED_BY_NAME ?? "—",
+          sub: detail.header.POSTED_BY_NAME ? fmtDate(detail.header.POSTED_ON) : undefined,
         },
       ]}
       narration={detail.header.NARRATION}
       lines={detail.lines.map((l) => ({
         key: l.LINE_ID,
         accountLabel: `${l.ACCOUNT_CODE} - ${l.ACCOUNT_NAME}`,
-        partyName: l.PARTY_NAME,
         narration: l.NARRATION,
         debit: l.DEBIT_AMT,
         credit: l.CREDIT_AMT,
