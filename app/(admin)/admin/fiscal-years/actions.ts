@@ -7,8 +7,6 @@ import { requirePermission, requireScope } from "@/lib/dal";
 import {
   createFiscalYear,
   renameFiscalYear,
-  setPeriodStatus,
-  setFiscalYearStatus,
   getFiscalYear,
   listCompanyFiscalYears,
 } from "@/lib/db/fiscal";
@@ -119,48 +117,6 @@ export async function renameFiscalYearAction(fyId: number, fyName: string) {
   }
 
   await renameFiscalYear(fyId, trimmed);
-  revalidatePath(`/admin/fiscal-years/${fyId}`);
-  revalidatePath("/admin/fiscal-years");
-}
-
-/**
- * The control that actually matters operationally: pkg_gl.create_voucher
- * refuses to post into a closed period, so this toggle is what closing the
- * books really does. Gated on PERIOD_CLOSE/APPROVE rather than FISCAL_MAINT,
- * matching the original REST contract's intent that closing a period is a
- * distinct, more sensitive action than fiscal-year maintenance.
- */
-export async function togglePeriodStatusAction(
-  periodId: number,
-  fyId: number,
-  nextStatus: "OPEN" | "CLOSED",
-) {
-  const fy = await getFiscalYear(fyId);
-  if (!fy) throw new Error("That fiscal year no longer exists.");
-  await requirePermission("PERIOD_CLOSE", "APPROVE");
-  await requireScope(fy.COMPANY_ID);
-
-  await setPeriodStatus(periodId, nextStatus);
-  revalidatePath(`/admin/fiscal-years/${fyId}`);
-  revalidatePath("/admin/fiscal-years");
-}
-
-export async function toggleFiscalYearStatusAction(
-  fyId: number,
-  nextStatus: "OPEN" | "CLOSED",
-) {
-  const fy = await getFiscalYear(fyId);
-  if (!fy) throw new Error("That fiscal year no longer exists.");
-  await requirePermission("PERIOD_CLOSE", "APPROVE");
-  await requireScope(fy.COMPANY_ID);
-
-  try {
-    await setFiscalYearStatus(fyId, nextStatus);
-  } catch (e) {
-    throw new Error(
-      e instanceof Error ? e.message : "The fiscal year status could not be changed.",
-    );
-  }
   revalidatePath(`/admin/fiscal-years/${fyId}`);
   revalidatePath("/admin/fiscal-years");
 }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requirePermission, requireScope } from "@/lib/dal";
 import { getFiscalYear, getFiscalPeriods } from "@/lib/db/fiscal";
@@ -35,7 +36,6 @@ export default async function FiscalYearDetailPage({
 
   const periods = await getFiscalPeriods(id);
   const mayEdit = can(user.permissions, "FISCAL_MAINT", "EDIT");
-  const mayApprove = can(user.permissions, "PERIOD_CLOSE", "APPROVE");
 
   return (
     <div className={styles.page}>
@@ -50,6 +50,9 @@ export default async function FiscalYearDetailPage({
             {fmtDate(fy.END_DATE)}
           </p>
         </div>
+        <Link href={`/admin/period-close?fy=${fy.FY_ID}`} className={styles.btnPrimary}>
+          Close periods
+        </Link>
       </div>
 
       <div
@@ -66,7 +69,7 @@ export default async function FiscalYearDetailPage({
           <div style={{ fontSize: 11, color: "var(--ink-3)", marginBottom: 5 }}>
             Status
           </div>
-          <FiscalYearStatus fyId={fy.FY_ID} status={fy.STATUS} canApprove={mayApprove} />
+          <FiscalYearStatus status={fy.STATUS} />
         </div>
       </div>
 
@@ -88,20 +91,16 @@ export default async function FiscalYearDetailPage({
               <th>Start</th>
               <th>End</th>
               <th>Status</th>
-              <th />
             </tr>
           </thead>
           <tbody>
             {periods.map((p) => (
               <PeriodRow
                 key={p.PERIOD_ID}
-                periodId={p.PERIOD_ID}
-                fyId={fy.FY_ID}
                 periodNo={p.PERIOD_NO}
                 startDate={p.START_DATE}
                 endDate={p.END_DATE}
                 status={p.STATUS}
-                canApprove={mayApprove}
               />
             ))}
           </tbody>
@@ -110,8 +109,8 @@ export default async function FiscalYearDetailPage({
 
       <p className={styles.note}>
         A voucher dated inside a closed period is refused at posting, whatever
-        the fiscal year&apos;s own status shows. The fiscal year can only be
-        marked closed once every period here is already closed.
+        the fiscal year&apos;s own status shows. Closing and reopening periods
+        happens on the Period Close screen, not here.
       </p>
     </div>
   );
