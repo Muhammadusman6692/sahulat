@@ -70,7 +70,9 @@ const ROUTES: Record<string, string> = {
   GL_REPORT: "/admin/gl-report",
   PARTY_LEDGER: "/admin/party-ledger",
   TRIAL_BALANCE: "/admin/trial-balance",
+  BALANCE_SHEET: "/admin/balance-sheet",
   AGING_REPORT: "/admin/aging-report",
+  PROFIT_LOSS: "/admin/profit-loss",
   PERIOD_CLOSE: "/admin/period-close",
 };
 
