@@ -72,7 +72,21 @@ function emptySubtotal(nature: AccountNature): NatureSubtotal {
  *  the caller opts back in to see post-closing figures. Opening/closing are
  *  netted to a single Dr or Cr the way a TB is conventionally printed; period
  *  columns stay gross (both can be non-zero) since they report activity, not
- *  a balance. */
+ *  a balance.
+ *
+ *  gl_voucher_line and gl_voucher_hdr are joined to each other FIRST (inside
+ *  the parenthesised block below), with the company/status/date/closing/
+ *  branch filter as part of THAT join, and only the resulting (line,
+ *  header) pair is LEFT-joined onto coa. Joining them as two independent
+ *  sibling LEFT JOINs (coa→line, coa→line→header) does not work: a LEFT
+ *  JOIN's ON-clause conditions decide whether the header's columns are
+ *  populated or NULL, not whether the already-joined line row is kept — so
+ *  a DRAFT/CANCELLED voucher's line still contributed its amount to SUM(),
+ *  just with NULL header columns. Confirmed live: an account with zero
+ *  POSTED vouchers (every gl_voucher_hdr row for it CANCELLED) was still
+ *  showing non-zero opening/period balances before this fix — found while
+ *  building Profit & Loss, which copied this same shape and had the same
+ *  bug (see lib/db/profit-loss.ts). */
 export async function getTrialBalance(f: TrialBalanceFilters): Promise<TrialBalance> {
   const branchClause = f.branchId ? "AND h.branch_id = :branchId" : "";
   const closingClause = f.includeClosing ? "" : "AND h.voucher_type != 'CLOSING'";
@@ -93,13 +107,15 @@ export async function getTrialBalance(f: TrialBalanceFilters): Promise<TrialBala
             NVL(SUM(CASE WHEN h.voucher_date BETWEEN TO_DATE(:dateFrom,'YYYY-MM-DD')
                                                    AND TO_DATE(:dateTo,'YYYY-MM-DD') THEN l.credit_amt END),0) AS period_cr
        FROM coa c
-       LEFT JOIN gl_voucher_line l ON l.coa_id = c.coa_id
-       LEFT JOIN gl_voucher_hdr h ON h.voucher_id = l.voucher_id
-                                  AND h.company_id = :companyId
-                                  AND h.status = 'POSTED'
-                                  AND h.voucher_date <= TO_DATE(:dateTo,'YYYY-MM-DD')
-                                  ${closingClause}
-                                  ${branchClause}
+       LEFT JOIN (
+         gl_voucher_line l
+         JOIN gl_voucher_hdr h ON h.voucher_id = l.voucher_id
+                               AND h.company_id = :companyId
+                               AND h.status = 'POSTED'
+                               AND h.voucher_date <= TO_DATE(:dateTo,'YYYY-MM-DD')
+                               ${closingClause}
+                               ${branchClause}
+       ) ON l.coa_id = c.coa_id
       WHERE c.company_id = :companyId
         AND c.is_postable = 'Y'
       GROUP BY c.coa_id, c.account_code, c.account_name, c.account_nature, c.normal_side
