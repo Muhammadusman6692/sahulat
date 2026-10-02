@@ -32,3 +32,11 @@ export function fmtQty(n: number | null | undefined): string {
 export function fmtDate(d: Date | null | undefined): string {
   return d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 }
+
+/** Financial-statement amounts: negative shown in parentheses, e.g.
+ *  "(20,000.00)" — a contra account or a net loss on a P&L/Balance Sheet
+ *  reads wrong with fmtMoney's leading minus sign. */
+export function fmtAccounting(n: number | null | undefined): string {
+  if (n === null || n === undefined) return "—";
+  return n < 0 ? `(${money.format(-n)})` : money.format(n);
+}
