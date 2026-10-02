@@ -5,6 +5,7 @@ import { getCloseChecklist, getCloseLog } from "@/lib/db/period-close";
 import { can } from "@/lib/permissions";
 import FySelect from "./fy-select";
 import PeriodRow from "./period-row";
+import ReopenYearButton from "./reopen-year-button";
 import styles from "@/components/data-grid/grid.module.css";
 
 export const metadata = { title: "Period Close · Sahulat ERP" };
@@ -80,7 +81,12 @@ export default async function PeriodClosePage({
             and reopening are both logged below.
           </p>
         </div>
-        <FySelect years={years} selectedFyId={selected.FY_ID} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <FySelect years={years} selectedFyId={selected.FY_ID} />
+          {selected.STATUS === "CLOSED" && mayApprove && (
+            <ReopenYearButton fyId={selected.FY_ID} fyName={selected.FY_NAME} />
+          )}
+        </div>
       </div>
 
       <div className={styles.card}>
@@ -107,11 +113,12 @@ export default async function PeriodClosePage({
             </tr>
           </thead>
           <tbody>
-            {periods.map((p) => (
+            {periods.map((p, i) => (
               <PeriodRow
                 key={p.PERIOD_ID}
                 periodId={p.PERIOD_ID}
                 fyId={selected.FY_ID}
+                fyName={selected.FY_NAME}
                 periodNo={p.PERIOD_NO}
                 startDate={p.START_DATE}
                 endDate={p.END_DATE}
@@ -119,6 +126,7 @@ export default async function PeriodClosePage({
                 draftCount={p.DRAFT_COUNT}
                 balanced={p.BALANCED}
                 canApprove={mayApprove}
+                isLastPeriod={i === periods.length - 1}
               />
             ))}
           </tbody>

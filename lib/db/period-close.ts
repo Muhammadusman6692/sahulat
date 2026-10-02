@@ -1,6 +1,6 @@
 import "server-only";
 import oracledb from "oracledb";
-import { query, execute } from "@/lib/oracle";
+import { query, execute, queryCursor } from "@/lib/oracle";
 import { fromOracleDate } from "@/lib/oracle-date";
 
 export type PeriodChecklistRow = {
@@ -83,6 +83,49 @@ export async function reopenPeriod(
 ): Promise<void> {
   await execute(`BEGIN pkg_period_close.reopen_period(:periodId, :userId, :reason); END;`, {
     periodId: numBind(periodId),
+    userId: numBind(userId),
+    reason: strBind(reason),
+  });
+}
+
+export type YearEndPreviewRow = {
+  COA_ID: number;
+  ACCOUNT_CODE: string;
+  ACCOUNT_NAME: string;
+  ACCOUNT_NATURE: "INCOME" | "EXPENSE";
+  ZERO_DEBIT: number;
+  ZERO_CREDIT: number;
+};
+
+/** Mirrors exactly what close_fiscal_year will post — same PL/SQL function,
+ *  not a hand-copied query — so the confirm modal can never show one thing
+ *  and post another. */
+export async function previewYearEndClose(fyId: number): Promise<YearEndPreviewRow[]> {
+  return queryCursor<YearEndPreviewRow>(
+    `BEGIN :cursor := pkg_period_close.preview_year_end_close(:fyId); END;`,
+    { fyId: numBind(fyId) },
+  );
+}
+
+export async function closeFiscalYear(
+  fyId: number,
+  userId: number,
+  reason: string | null,
+): Promise<void> {
+  await execute(`BEGIN pkg_period_close.close_fiscal_year(:fyId, :userId, :reason); END;`, {
+    fyId: numBind(fyId),
+    userId: numBind(userId),
+    reason: strBind(reason),
+  });
+}
+
+export async function reopenFiscalYear(
+  fyId: number,
+  userId: number,
+  reason: string,
+): Promise<void> {
+  await execute(`BEGIN pkg_period_close.reopen_fiscal_year(:fyId, :userId, :reason); END;`, {
+    fyId: numBind(fyId),
     userId: numBind(userId),
     reason: strBind(reason),
   });

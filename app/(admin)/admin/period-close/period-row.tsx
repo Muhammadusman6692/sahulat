@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { closePeriodAction, reopenPeriodAction } from "./actions";
 import Modal from "@/components/ui/modal";
+import YearEndCloseModal from "./year-end-close-modal";
 import gridStyles from "@/components/data-grid/grid.module.css";
 import formStyles from "@/components/form/form.module.css";
 
@@ -17,6 +19,7 @@ function fmtDate(d: Date) {
 export default function PeriodRow({
   periodId,
   fyId,
+  fyName,
   periodNo,
   startDate,
   endDate,
@@ -24,9 +27,11 @@ export default function PeriodRow({
   draftCount,
   balanced,
   canApprove,
+  isLastPeriod,
 }: {
   periodId: number;
   fyId: number;
+  fyName: string;
   periodNo: number;
   startDate: Date;
   endDate: Date;
@@ -34,10 +39,13 @@ export default function PeriodRow({
   draftCount: number;
   balanced: "Y" | "N";
   canApprove: boolean;
+  isLastPeriod: boolean;
 }) {
+  const router = useRouter();
   const [current, setCurrent] = useState(status);
   const [error, setError] = useState<string | null>(null);
   const [showReopen, setShowReopen] = useState(false);
+  const [showYearEnd, setShowYearEnd] = useState(false);
   const [reason, setReason] = useState("");
   const [pending, startTransition] = useTransition();
 
@@ -97,8 +105,16 @@ export default function PeriodRow({
           )}
         </td>
         <td style={{ textAlign: "right" }}>
-          {canApprove ? (
-            closed ? (
+          {!canApprove ? (
+            <span className={gridStyles.muted} style={{ fontSize: 11 }}>
+              No permission
+            </span>
+          ) : closed ? (
+            isLastPeriod ? (
+              <span className={gridStyles.muted} style={{ fontSize: 11 }}>
+                Reopen the year above
+              </span>
+            ) : (
               <button
                 type="button"
                 className={gridStyles.pageLink}
@@ -106,31 +122,47 @@ export default function PeriodRow({
               >
                 Reopen
               </button>
-            ) : (
-              <button
-                type="button"
-                className={gridStyles.pageLink}
-                style={{
-                  cursor: pending || blocked ? "default" : "pointer",
-                  opacity: blocked ? 0.5 : 1,
-                }}
-                disabled={pending || blocked}
-                title={
-                  draftCount > 0
-                    ? `${draftCount} draft voucher(s) must be posted or cancelled first`
-                    : balanced === "N"
-                      ? "Posted entries in this period do not balance"
-                      : undefined
-                }
-                onClick={close}
-              >
-                {pending ? "…" : "Close"}
-              </button>
             )
+          ) : isLastPeriod ? (
+            <button
+              type="button"
+              className={gridStyles.pageLink}
+              style={{
+                cursor: pending || blocked ? "default" : "pointer",
+                opacity: blocked ? 0.5 : 1,
+              }}
+              disabled={pending || blocked}
+              title={
+                draftCount > 0
+                  ? `${draftCount} draft voucher(s) must be posted or cancelled first`
+                  : balanced === "N"
+                    ? "Posted entries in this period do not balance"
+                    : undefined
+              }
+              onClick={() => setShowYearEnd(true)}
+            >
+              Close year-end
+            </button>
           ) : (
-            <span className={gridStyles.muted} style={{ fontSize: 11 }}>
-              No permission
-            </span>
+            <button
+              type="button"
+              className={gridStyles.pageLink}
+              style={{
+                cursor: pending || blocked ? "default" : "pointer",
+                opacity: blocked ? 0.5 : 1,
+              }}
+              disabled={pending || blocked}
+              title={
+                draftCount > 0
+                  ? `${draftCount} draft voucher(s) must be posted or cancelled first`
+                  : balanced === "N"
+                    ? "Posted entries in this period do not balance"
+                    : undefined
+              }
+              onClick={close}
+            >
+              {pending ? "…" : "Close"}
+            </button>
           )}
           {error && !showReopen && (
             <div style={{ color: "var(--danger)", fontSize: 11, marginTop: 3 }}>
@@ -185,6 +217,20 @@ export default function PeriodRow({
           </button>
         </div>
       </Modal>
+
+      {isLastPeriod && (
+        <YearEndCloseModal
+          open={showYearEnd}
+          onClose={() => setShowYearEnd(false)}
+          fyId={fyId}
+          fyName={fyName}
+          onClosed={() => {
+            setShowYearEnd(false);
+            setCurrent("CLOSED");
+            router.refresh();
+          }}
+        />
+      )}
     </>
   );
 }

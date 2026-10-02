@@ -45,6 +45,32 @@ export async function query<T>(
   }
 }
 
+/**
+ * Calls a PL/SQL function that RETURNs a SYS_REFCURSOR, bound as :cursor in
+ * `sql` (e.g. `BEGIN :cursor := pkg_x.some_report(:p); END;`). Used for
+ * read-only report-shaped queries that live in PL/SQL so a preview can never
+ * drift from what the matching posting procedure actually does.
+ */
+export async function queryCursor<T>(
+  sql: string,
+  binds: oracledb.BindParameters = {},
+): Promise<T[]> {
+  const pool = await getPool();
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.execute<T>(sql, {
+      ...binds,
+      cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
+    });
+    const cursor = (result.outBinds as { cursor: oracledb.ResultSet<T> }).cursor;
+    const rows = await cursor.getRows();
+    await cursor.close();
+    return rows;
+  } finally {
+    await conn.close();
+  }
+}
+
 export async function execute(
   sql: string,
   binds: oracledb.BindParameters = {},
