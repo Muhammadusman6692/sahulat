@@ -24,23 +24,27 @@ export type LedgerPrintCompany = {
 };
 
 export default function LedgerPrintView({
+  docTitle = "General Ledger",
   accountLabel,
   natureLabel,
   dateFromLabel,
   dateToLabel,
   openingBalance,
   lines,
+  lineLabel = "Party",
   totalDebit,
   totalCredit,
   closingBalance,
   company,
 }: {
+  docTitle?: string;
   accountLabel: string;
   natureLabel: string;
   dateFromLabel: string;
   dateToLabel: string;
   openingBalance: number;
   lines: LedgerPrintLine[];
+  lineLabel?: string;
   totalDebit: number;
   totalCredit: number;
   closingBalance: number;
@@ -62,7 +66,7 @@ export default function LedgerPrintView({
             )}
           </div>
 
-          <div className={styles.docTitle}>General Ledger — {accountLabel}</div>
+          <div className={styles.docTitle}>{docTitle} — {accountLabel}</div>
 
           <div className={styles.metaGrid}>
             <div>
@@ -90,7 +94,7 @@ export default function LedgerPrintView({
                 <th>Voucher No</th>
                 <th>Type</th>
                 <th>Narration</th>
-                <th>Party</th>
+                <th>{lineLabel}</th>
                 <th style={{ textAlign: "right" }}>Debit</th>
                 <th style={{ textAlign: "right" }}>Credit</th>
                 <th style={{ textAlign: "right" }}>Balance</th>
