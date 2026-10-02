@@ -67,6 +67,7 @@ const ROUTES: Record<string, string> = {
   JV_ENTRY: "/admin/journal-vouchers",
   CASH_VOUCHER: "/admin/cash-vouchers",
   BANK_VOUCHER: "/admin/bank-vouchers",
+  PERIOD_CLOSE: "/admin/period-close",
 };
 
 const GROUP_LABELS: Record<string, string> = {
